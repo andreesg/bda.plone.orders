@@ -283,27 +283,36 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['payment_label'] = _('no_payment',
                                              default=u'No Payment')
         # shipping related information
-        if cart_data.include_shipping_costs:
-            shipping_param = 'checkout.shipping_selection.shipping'
-            sid = data.fetch(shipping_param).extracted
-            shipping = Shippings(self.context).get(sid)
-            order.attrs['shipping_method'] = sid
-            order.attrs['shipping_label'] = shipping.label
-            order.attrs['shipping_description'] = shipping.description
-            try:
-                shipping_net = shipping.net(self.items)
-                shipping_vat = shipping.vat(self.items)
-                order.attrs['shipping_net'] = shipping_net
-                order.attrs['shipping_vat'] = shipping_vat
-                order.attrs['shipping'] = shipping_net + shipping_vat
-            # B/C for bda.plone.shipping < 0.4
-            except NotImplementedError:
-                shipping_net = shipping.calculate(self.items)
-                order.attrs['shipping_net'] = shipping_net
+        try:
+            if cart_data.include_shipping_costs:
+                shipping_param = 'checkout.shipping_selection.shipping'
+                sid = data.fetch(shipping_param).extracted
+                shipping = Shippings(self.context).get(sid)
+                order.attrs['shipping_method'] = sid
+                order.attrs['shipping_label'] = shipping.label
+                order.attrs['shipping_description'] = shipping.description
+                try:
+                    shipping_net = shipping.net(self.items)
+                    shipping_vat = shipping.vat(self.items)
+                    order.attrs['shipping_net'] = shipping_net
+                    order.attrs['shipping_vat'] = shipping_vat
+                    order.attrs['shipping'] = shipping_net + shipping_vat
+                # B/C for bda.plone.shipping < 0.4
+                except NotImplementedError:
+                    shipping_net = shipping.calculate(self.items)
+                    order.attrs['shipping_net'] = shipping_net
+                    order.attrs['shipping_vat'] = Decimal(0)
+                    order.attrs['shipping'] = shipping_net
+            # no shipping
+            else:
+                order.attrs['shipping_method'] = 'no_shipping'
+                order.attrs['shipping_label'] = _('no_shipping',
+                                                  default=u'No Shipping')
+                order.attrs['shipping_description'] = ''
+                order.attrs['shipping_net'] = Decimal(0)
                 order.attrs['shipping_vat'] = Decimal(0)
-                order.attrs['shipping'] = shipping_net
-        # no shipping
-        else:
+                order.attrs['shipping'] = Decimal(0)
+        except:
             order.attrs['shipping_method'] = 'no_shipping'
             order.attrs['shipping_label'] = _('no_shipping',
                                               default=u'No Shipping')
@@ -311,6 +320,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['shipping_net'] = Decimal(0)
             order.attrs['shipping_vat'] = Decimal(0)
             order.attrs['shipping'] = Decimal(0)
+        
         # create order bookings
         bookings = self.create_bookings(order)
         # lookup booking uids and vendor uids
@@ -636,12 +646,21 @@ class PaymentData(object):
         attrs = order.attrs
         amount = '%s %s' % (self.currency,
                             str(round(self.order_data.total, 2)))
-        description = ', '.join([
-            attrs['created'].strftime(DT_FORMAT),
-            attrs['personal_data.firstname'],
-            attrs['personal_data.lastname'],
-            attrs['billing_address.city'],
-            safe_encode(amount)])
+
+        try:
+            description = ', '.join([
+                attrs['created'].strftime(DT_FORMAT),
+                attrs['personal_data.firstname'],
+                attrs['personal_data.lastname'],
+                attrs['billing_address.city'],
+                safe_encode(amount)])
+        except:
+            description = ', '.join([
+                attrs['created'].strftime(DT_FORMAT),
+                attrs['personal_data.firstname'],
+                attrs['personal_data.lastname'],
+                safe_encode(amount)])
+            pass
         return description
 
     @property
