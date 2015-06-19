@@ -298,11 +298,16 @@ def create_mail_body(templates, context, order_data):
                            domain='bda.plone.checkout',
                            target_language=lang)
     arguments['salutation'] = safe_encode(salutation)
-    if attrs['delivery_address.alternative_delivery']:
-        delivery_address_template = templates['delivery_address']
-        arguments['delivery_address'] = delivery_address_template % arguments
-    else:
+    try:
+        if attrs['delivery_address.alternative_delivery']:
+            delivery_address_template = templates['delivery_address']
+            arguments['delivery_address'] = delivery_address_template % arguments
+        else:
+            arguments['delivery_address'] = ''
+    except:
         arguments['delivery_address'] = ''
+        pass
+
     item_listing_callback = templates['item_listing_callback']
     arguments['item_listing'] = item_listing_callback(context, order_data)
     order_summery_callback = templates['order_summery_callback']
@@ -311,7 +316,13 @@ def create_mail_body(templates, context, order_data):
     arguments['global_text'] = global_text_callback(context, order_data)
     payment_text_callback = templates['payment_text_callback']
     arguments['payment_text'] = payment_text_callback(context, order_data)
+    arguments['billing_address.street'] = ''
+    arguments['billing_address.zip'] = ''
+    arguments['billing_address.country'] = ''
+    arguments['billing_address.city'] = ''
+    
     body_template = templates['body']
+
     return body_template % arguments
 
 
