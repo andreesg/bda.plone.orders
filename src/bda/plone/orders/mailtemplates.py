@@ -12,31 +12,38 @@ from zope.interface import implementer
 # en
 ###############################################################################
 
+ORDER_TICKET_SUBJECT_EN = u"Your e-ticket order was successfully completed"
+
 ORDER_SUBJECT_EN = u'Order %s received.'
 
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
-ORDER_TICKET_EN = """
-Date: %(date)s
+ORDER_TICKET_EN = """\
+<html>
+    <head></head>
+    <body>
+        <p>
+        Date: %(date)s
+        <p>
 
-PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:
-Download your tickets: %(download_link)s
+        <p><h1>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</h1>
+        <h2><a href="%(download_link)s">Download your tickets</a></h2>
+        Ordernumber: %(ordernumber)s</p>
 
-Ordernumber: %(ordernumber)s
+        <p><h2>Personal Data:</h2>
+        Name: %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        Phone: %(personal_data.phone)s<br>
+        Email: %(personal_data.email)s
+        </p>
 
-Personal Data:
-Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
-Phone: %(personal_data.phone)s
-Email: %(personal_data.email)s
+        <p><h2>Comment:</h2>
+        %(order_comment.comment)s</p>
 
-Comment:
-%(order_comment.comment)s
-
-Ordered items:
-%(item_listing)s
-
-%(order_summery)s%(global_text)s%(payment_text)s
+        <p><h2>Ordered items:</h2>
+        %(item_listing)s<br>
+        %(order_summery)s%(global_text)s%(payment_text)s</p>
+    </body>
+</html>
 """
 
 
@@ -419,6 +426,7 @@ Land: %(delivery_address.country)s
 
 ORDER_TEMPLATES = {
     'en': {
+        'ticket_subject': ORDER_TICKET_SUBJECT_EN,
         'subject': ORDER_SUBJECT_EN,
         'body': ORDER_BODY_EN,
         'ticket': ORDER_TICKET_EN,

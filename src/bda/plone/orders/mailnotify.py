@@ -25,6 +25,11 @@ from zope.i18n import translate
 import logging
 import textwrap
 
+import smtplib
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 logger = logging.getLogger('bda.plone.orders')
 
@@ -63,14 +68,25 @@ class MailNotify(object):
             mailfrom = formataddr((from_name, shop_manager_address))
         else:
             mailfrom = shop_manager_address
+    
+        if self.download_link != None:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = mailfrom
+            msg['To'] = receiver
+            msg.attach(MIMEText(message, 'html', 'utf-8'))
 
-        api.portal.send_email(
-            recipient=receiver,
-            sender=mailfrom,
-            subject=subject,
-            body=message,
-        )
-        
+            s = smtplib.SMTP('localhost')
+            s.sendmail(mailfrom, receiver, msg.as_string())
+            s.quit()
+        else:
+            api.portal.send_email(
+                recipient=receiver,
+                sender=mailfrom,
+                subject=subject,
+                body=message
+            )
+
 
 
 def _indent(text, ind=5, width=80):
@@ -333,12 +349,19 @@ def create_mail_body(templates, context, order_data, download_link=None):
 
 def do_notify(context, order_data, templates, receiver, download_link=None):
     attrs = order_data.order.attrs
-    subject = templates['subject'] % attrs['ordernumber']
+
+    if download_link != None:
+        subject = templates['ticket_subject']
+    else:
+        subject = templates['subject'] % attrs['ordernumber']
+    
     message = create_mail_body(templates, context, order_data, download_link)
     mail_notify = MailNotify(context, download_link)
+    
     try:
         mail_notify.send(subject, message, receiver)
     except Exception:
+        raise
         msg = translate(
             _('email_sending_failed',
               default=u'Failed to send notification to ${receiver}',
