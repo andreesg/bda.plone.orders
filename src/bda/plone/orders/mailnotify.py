@@ -64,17 +64,13 @@ class MailNotify(object):
         else:
             mailfrom = shop_manager_address
 
-        if self.download_link != None:
-            print "Message:"
-            print message
-        else:
-            pass
-            """api.portal.send_email(
-                recipient=receiver,
-                sender=mailfrom,
-                subject=subject,
-                body=message,
-            )"""
+        api.portal.send_email(
+            recipient=receiver,
+            sender=mailfrom,
+            subject=subject,
+            body=message,
+        )
+        
 
 
 def _indent(text, ind=5, width=80):
