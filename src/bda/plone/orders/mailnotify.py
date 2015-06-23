@@ -25,6 +25,7 @@ from zope.i18n import translate
 import logging
 import textwrap
 
+
 logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {
@@ -47,9 +48,10 @@ class MailNotify(object):
     """Mail notifyer.
     """
 
-    def __init__(self, context):
+    def __init__(self, context, download_link=None):
         self.context = context
         self.settings = INotificationSettings(self.context)
+        self.download_link = download_link
 
     def send(self, subject, message, receiver):
         shop_manager_address = self.settings.admin_email
@@ -62,12 +64,17 @@ class MailNotify(object):
         else:
             mailfrom = shop_manager_address
 
-        api.portal.send_email(
-            recipient=receiver,
-            sender=mailfrom,
-            subject=subject,
-            body=message,
-        )
+        if self.download_link != None:
+            print "Message:"
+            print message
+        else:
+            pass
+            """api.portal.send_email(
+                recipient=receiver,
+                sender=mailfrom,
+                subject=subject,
+                body=message,
+            )"""
 
 
 def _indent(text, ind=5, width=80):
@@ -277,7 +284,7 @@ def create_payment_text(context, order_data):
     return ''
 
 
-def create_mail_body(templates, context, order_data):
+def create_mail_body(templates, context, order_data, download_link=None):
     """Creates a rendered mail body
 
     templates
@@ -310,27 +317,29 @@ def create_mail_body(templates, context, order_data):
 
     item_listing_callback = templates['item_listing_callback']
     arguments['item_listing'] = item_listing_callback(context, order_data)
+
+
     order_summery_callback = templates['order_summery_callback']
     arguments['order_summery'] = order_summery_callback(context, order_data)
     global_text_callback = templates['global_text_callback']
     arguments['global_text'] = global_text_callback(context, order_data)
     payment_text_callback = templates['payment_text_callback']
     arguments['payment_text'] = payment_text_callback(context, order_data)
-    arguments['billing_address.street'] = ''
-    arguments['billing_address.zip'] = ''
-    arguments['billing_address.country'] = ''
-    arguments['billing_address.city'] = ''
-    
-    body_template = templates['body']
+
+    if download_link != None:
+        body_template = templates['ticket']
+        arguments["download_link"] = download_link
+    else:
+        body_template = templates['body']
 
     return body_template % arguments
 
 
-def do_notify(context, order_data, templates, receiver):
+def do_notify(context, order_data, templates, receiver, download_link=None):
     attrs = order_data.order.attrs
     subject = templates['subject'] % attrs['ordernumber']
-    message = create_mail_body(templates, context, order_data)
-    mail_notify = MailNotify(context)
+    message = create_mail_body(templates, context, order_data, download_link)
+    mail_notify = MailNotify(context, download_link)
     try:
         mail_notify.send(subject, message, receiver)
     except Exception:
@@ -342,14 +351,14 @@ def do_notify(context, order_data, templates, receiver):
         logger.exception("Email could not be sent.")
 
 
-def do_notify_customer(context, order_data, templates):
+def do_notify_customer(context, order_data, templates, download_link=None):
     customer_address = order_data.order.attrs['personal_data.email']
-    do_notify(context, order_data, templates, customer_address)
+    do_notify(context, order_data, templates, customer_address, download_link)
 
 
-def do_notify_shopmanager(context, order_data, templates):
+def do_notify_shopmanager(context, order_data, templates, download_link=None):
     shop_manager_address = INotificationSettings(context).admin_email
-    do_notify(context, order_data, templates, shop_manager_address)
+    do_notify(context, order_data, templates, shop_manager_address, download_link)
 
 
 def get_order_uid(event):
@@ -362,10 +371,12 @@ def get_order_uid(event):
 def notify_order_success(event, who=None):
     """Send notification mail after order succeed.
     """
+
     if who is None:
         raise ValueError(
             'kw "who" mus be one out of ("customer", "shopmanager")'
         )
+
     order_data = OrderData(event.context, uid=get_order_uid(event))
     templates = dict()
     state = order_data.state
@@ -381,9 +392,9 @@ def notify_order_success(event, who=None):
     templates['global_text_callback'] = create_global_text
     templates['payment_text_callback'] = create_payment_text
     if who == "customer":
-        do_notify_customer(event.context, order_data, templates)
+        do_notify_customer(event.context, order_data, templates, event.download_link)
     else:
-        do_notify_shopmanager(event.context, order_data, templates)
+        do_notify_shopmanager(event.context, order_data, templates, event.download_link)
 
 
 def notify_checkout_success_customer(event):

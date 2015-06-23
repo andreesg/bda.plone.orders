@@ -39,7 +39,7 @@
       <span tal:replace="order/personal_data.phone">phone</span>
     </div>
 
-    <div class="billing_address">
+    <!--<div class="billing_address">
       <h3 i18n:translate="billing_address">Billing Address:</h3>
       <strong i18n:translate="order_street">Street:</strong>
       <span tal:replace="order/billing_address.street">street</span>
@@ -52,7 +52,7 @@
       <span tal:replace="python:view.country(order['billing_address.country'])">
         country
       </span>
-    </div>
+    </div>-->
   </div>
 
   <div class="order_details_row">
@@ -116,7 +116,7 @@
   </div>
 
   <div class="order_details_row">
-    <div class="delivery_address"
+    <!--<div class="delivery_address"
          tal:condition="order/delivery_address.alternative_delivery">
       <h3 i18n:translate="delivery_address">Delivery Address:</h3>
       <strong i18n:translate="order_name">Name:</strong>
@@ -137,7 +137,7 @@
       <span tal:replace="python:view.country(order['delivery_address.country'])">
         country
       </span>
-    </div>
+    </div>-->
 
     <div class="delivery_address"
          tal:condition="not:order/delivery_address.alternative_delivery">

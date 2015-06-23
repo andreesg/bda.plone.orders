@@ -16,13 +16,36 @@ ORDER_SUBJECT_EN = u'Order %s received.'
 
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
+ORDER_TICKET_EN = """
+Date: %(date)s
+
+PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:
+Download your tickets: %(download_link)s
+
+Ordernumber: %(ordernumber)s
+
+Personal Data:
+Name: %(personal_data.firstname)s %(personal_data.lastname)s
+Company: %(personal_data.company)s
+Phone: %(personal_data.phone)s
+Email: %(personal_data.email)s
+
+Comment:
+%(order_comment.comment)s
+
+Ordered items:
+%(item_listing)s
+
+%(order_summery)s%(global_text)s%(payment_text)s
+"""
+
+
 ORDER_BODY_EN = """
 Date: %(date)s
 
 Thank you for your order:
 
 Ordernumber: %(ordernumber)s
-Order details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
@@ -398,6 +421,7 @@ ORDER_TEMPLATES = {
     'en': {
         'subject': ORDER_SUBJECT_EN,
         'body': ORDER_BODY_EN,
+        'ticket': ORDER_TICKET_EN,
         'delivery_address': DELIVERY_ADDRESS_EN},
     'de': {
         'subject': ORDER_SUBJECT_DE,
@@ -421,6 +445,7 @@ RESERVATION_TEMPLATES = {
     'en': {
         'subject': RESERVATION_SUBJECT_EN,
         'body': RESERVATION_BODY_EN,
+        'ticket': ORDER_TICKET_EN,
         'delivery_address': DELIVERY_ADDRESS_EN},
     'de': {
         'subject': RESERVATION_SUBJECT_DE,
