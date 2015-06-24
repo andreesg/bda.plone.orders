@@ -751,6 +751,11 @@ class OrderTransitions(object):
         elif transition == ifaces.STATE_TRANSITION_CANCEL:
             del booking.attrs['state']
             booking.attrs['state'] = ifaces.STATE_CANCELLED
+        
+        # TICKETS
+        elif transition == ifaces.STATE_TRANSITION_REDEEM:
+            del booking.attrs['state']
+            booking.attrs['state'] = ifaces.STATE_REDEEMED
         else:
             raise ValueError(u"invalid transition: %s" % transition)
         bookings_soup = get_bookings_soup(self.context)

@@ -140,6 +140,7 @@ class StateDropdown(OrderDropdown):
         transitions = list()
         if state in [ifaces.STATE_NEW, ifaces.STATE_RESERVED]:
             transitions = [
+                ifaces.STATE_TRANSITION_REDEEM,
                 ifaces.STATE_TRANSITION_PROCESS,
                 ifaces.STATE_TRANSITION_FINISH,
                 ifaces.STATE_TRANSITION_CANCEL
@@ -153,6 +154,7 @@ class StateDropdown(OrderDropdown):
             ]
         elif state == ifaces.STATE_PROCESSING:
             transitions = [
+                ifaces.STATE_TRANSITION_REDEEM,
                 ifaces.STATE_TRANSITION_FINISH,
                 ifaces.STATE_TRANSITION_CANCEL,
                 ifaces.STATE_TRANSITION_RENEW
