@@ -139,13 +139,13 @@
       </span>
     </div>-->
 
-    <div class="delivery_address"
+    <!--<div class="delivery_address"
          tal:condition="not:order/delivery_address.alternative_delivery">
       <h3 i18n:translate="delivery_address">Delivery Address:</h3>
       <p i18n:translate="order_no_delivery_address">
         No delivery Address defined
       </p>
-    </div>
+    </div>-->
 
     <div class="order_comment">
       <h3 i18n:translate="order_comment">Order Comment:</h3>
