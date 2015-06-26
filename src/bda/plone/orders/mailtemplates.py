@@ -26,16 +26,19 @@ ORDER_TICKET_EN = """\
         <p><strong>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</strong><br>
         <a href="%(download_link)s">Download your tickets</a></p>
 
-        <p>We have received your order and confirm the following reservation:</p>
+        <p>Dear %(top_salutation)s,<br>
+        We have received your order and confirm the following reservation:</p>
         
         <p><strong>Tickets:</strong><br>
-        %(item_listing)s<br></p>
+        %(item_listing)s<br>
+        <strong>Total price:</strong> € %(total_price)s
+        </p>
 
         <p>Please print this email. This is your order confirmation.<br>Click on the following link to print your e-tickets: <a href="%(download_link)s">Download your tickets</a></p>
         
         <p>Your order is registered as follows:<br>
         Order number: <strong>%(ordernumber)s</strong><br>
-        Name: <strong>%(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
+        Name: <strong>%(name_salutation)s %(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
 
         <p>If you have any questions regarding your reservation, please contact the Teylers Museum info@teylersmuseum.nl</p>
 
@@ -54,18 +57,20 @@ ORDER_TICKET_NL = """\
         <p><strong>VERGEET NIET UW E-TICKET(S) EN DEZE E-MAIL TE PRINTEN:</strong><br>
         <a href="%(download_link)s">Download E-tickets</a></p>
 
-        <pWij hebben uw bestelling ontvangen en bevestigen hierbij de volgende boeking:</p>
+        <p>Geachte %(top_salutation)s,<br>
+        Wij hebben uw bestelling ontvangen en bevestigen hierbij de volgende boeking:</p>
         
         <p><strong>Tickets:</strong><br>
-        %(item_listing)s<br></p>
+        %(item_listing)s<br>
+        <strong>Totaalprijs:</strong> € %(total_price)s</p>
 
         <p>Print deze e-mail. Dit is uw boekingsbevestiging.<br>Uw e-tickets kunt u printen via onderstaande link: <a href="%(download_link)s">Download E-tickets</a></p>
         
         <p>Uw boeking is als volgt geregistreerd:<br>
         Order number: <strong>%(ordernumber)s</strong><br>
-        Naam: <strong>%(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
+        Naam: <strong>%(name_salutation)s %(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
 
-        <p>Indien u vragen heeft over uw boeking, kunt u contact opnemen met het Teylers Museum via info@teylersmuseum.nl</p>
+        <p>Indien u vragen heeft over uw boeking, kunt u contact opnemen met het Teylers Museum via <a href="mailto:info@teylersmuseum.nl">info@teylersmuseum.nl</a></p>
 
         <p>Wij wensen u een plezierig bezoek!</p>
 

@@ -111,6 +111,7 @@ def create_mail_listing(context, order_data):
             title = '%s (%s)' % (title, comment)
         # fetch currency
         currency = booking.attrs['currency']
+        currency = "€"
         # fetch net
         net = booking.attrs['net']
         # build price
@@ -310,6 +311,9 @@ def create_mail_body(templates, context, order_data, download_link=None):
     """
     lang = context.restrictedTraverse('@@plone_portal_state').language()
     attrs = order_data.order.attrs
+    
+    total_price = order_data.total
+
     arguments = dict(attrs.items())
     arguments['portal_url'] = getSite().absolute_url()
     arguments['date'] = attrs['created'].strftime(DT_FORMAT)
@@ -337,6 +341,19 @@ def create_mail_body(templates, context, order_data, download_link=None):
     arguments['global_text'] = global_text_callback(context, order_data)
     payment_text_callback = templates['payment_text_callback']
     arguments['payment_text'] = payment_text_callback(context, order_data)
+
+    gender = attrs['personal_data.gender']
+    top_salutation = ""
+    if gender == "male":
+        top_salutation = "heer"
+        name_salutation = "Dhr."
+    else:
+        top_salutation = "mevrouw"
+        name_salutation = "Mevr."
+
+    arguments["top_salutation"] = top_salutation
+    arguments["name_salutation"] = name_salutation
+    arguments["total_price"] = total_price
 
     if download_link != None:
         body_template = templates['ticket']
