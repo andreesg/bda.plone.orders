@@ -26,8 +26,7 @@ ORDER_TICKET_EN = """\
         <p><strong>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</strong><br>
         <a href="%(download_link)s">Download your tickets</a></p>
 
-        <p>Dear sir,<br>
-        We have received your order and confirm the following reservation:</p>
+        <p>We have received your order and confirm the following reservation:</p>
         
         <p><strong>Tickets:</strong><br>
         %(item_listing)s<br></p>
@@ -55,8 +54,7 @@ ORDER_TICKET_NL = """\
         <p><strong>VERGEET NIET UW E-TICKET(S) EN DEZE E-MAIL TE PRINTEN:</strong><br>
         <a href="%(download_link)s">Download E-tickets</a></p>
 
-        <p>Geachte mevrouw,<br>
-        Wij hebben uw bestelling ontvangen en bevestigen hierbij de volgende boeking:</p>
+        <pWij hebben uw bestelling ontvangen en bevestigen hierbij de volgende boeking:</p>
         
         <p><strong>Tickets:</strong><br>
         %(item_listing)s<br></p>
