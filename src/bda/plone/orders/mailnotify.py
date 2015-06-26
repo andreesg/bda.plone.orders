@@ -138,7 +138,7 @@ def create_mail_listing(context, order_data):
             text = None
         if text:
             lines.append(_indent(text))
-    return '\n'.join([safe_encode(l) for l in lines])
+    return '<br>'.join([safe_encode(l) for l in lines])
 
 
 def create_order_summery(context, order_data):
