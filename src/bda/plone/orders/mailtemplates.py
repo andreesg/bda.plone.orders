@@ -12,7 +12,8 @@ from zope.interface import implementer
 # en
 ###############################################################################
 
-ORDER_TICKET_SUBJECT_EN = u"Your e-ticket order was successfully completed"
+ORDER_TICKET_SUBJECT_EN = u"Teylers Museum E-tickets"
+ORDER_TICKET_SUBJECT_NL = u"Teylers Museum E-tickets"
 
 ORDER_SUBJECT_EN = u'Order %s received.'
 
@@ -22,30 +23,59 @@ ORDER_TICKET_EN = """\
 <html>
     <head></head>
     <body>
-        <p>
-        Date: %(date)s
-        <p>
+        <p><strong>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</strong><br>
+        <a href="%(download_link)s">Download your tickets</a></p>
 
-        <p><h1>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</h1>
-        <h2><a href="%(download_link)s">Download your tickets</a></h2>
-        Ordernumber: %(ordernumber)s</p>
+        <p>Dear sir,<br>
+        We have received your order and confirm the following reservation:</p>
+        
+        <p><strong>Tickets:</strong><br>
+        %(item_listing)s<br></p>
 
-        <p><h2>Personal Data:</h2>
-        Name: %(personal_data.firstname)s %(personal_data.lastname)s<br>
-        Phone: %(personal_data.phone)s<br>
-        Email: %(personal_data.email)s
-        </p>
+        <p>Please print this email. This is your order confirmation.<br>Click on the following link to print your e-tickets: <a href="%(download_link)s">Download your tickets</a></p>
+        
+        <p>Your order is registered as follows:<br>
+        Order number: <strong>%(ordernumber)s</strong><br>
+        Name: <strong>%(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
 
-        <p><h2>Comment:</h2>
-        %(order_comment.comment)s</p>
+        <p>If you have any questions regarding your reservation, please contact the Teylers Museum info@teylersmuseum.nl</p>
 
-        <p><h2>Ordered items:</h2>
-        %(item_listing)s<br>
-        %(order_summery)s%(global_text)s%(payment_text)s</p>
+        <p>We wish you a great visit!</p>
+
+        <p>Kind regards,<br>
+        Teylers Museum</p>
     </body>
 </html>
 """
 
+ORDER_TICKET_NL = """\
+<html>
+    <head></head>
+    <body>
+        <p><strong>VERGEET NIET UW E-TICKET(S) EN DEZE E-MAIL TE PRINTEN:</strong><br>
+        <a href="%(download_link)s">Download E-tickets</a></p>
+
+        <p>Geachte mevrouw,<br>
+        Wij hebben uw bestelling ontvangen en bevestigen hierbij de volgende boeking:</p>
+        
+        <p><strong>Tickets:</strong><br>
+        %(item_listing)s<br></p>
+
+        <p>Print deze e-mail. Dit is uw boekingsbevestiging.<br>Uw e-tickets kunt u printen via onderstaande link: <a href="%(download_link)s">Download E-tickets</a></p>
+        
+        <p>Uw boeking is als volgt geregistreerd:<br>
+        Order number: <strong>%(ordernumber)s</strong><br>
+        Naam: <strong>%(personal_data.firstname)s %(personal_data.lastname)s</strong><br></p>
+
+        <p>Indien u vragen heeft over uw boeking, kunt u contact opnemen met het Teylers Museum via info@teylersmuseum.nl</p>
+
+        <p>Wij wensen u een plezierig bezoek!</p>
+
+        <p>Hartelijke groeten,<br>
+        Teylers Museum</p>
+    </body>
+</html>
+"""
 
 ORDER_BODY_EN = """
 Date: %(date)s
@@ -425,6 +455,12 @@ Land: %(delivery_address.country)s
 ###############################################################################
 
 ORDER_TEMPLATES = {
+    'nl': {
+        'ticket_subject': ORDER_TICKET_SUBJECT_NL,
+        'subject': ORDER_SUBJECT_EN,
+        'body': ORDER_BODY_EN,
+        'ticket': ORDER_TICKET_NL,
+        'delivery_address': DELIVERY_ADDRESS_EN},
     'en': {
         'ticket_subject': ORDER_TICKET_SUBJECT_EN,
         'subject': ORDER_SUBJECT_EN,

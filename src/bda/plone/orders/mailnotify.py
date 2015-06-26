@@ -29,7 +29,7 @@ import smtplib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+from collective.sendaspdf.interfaces import ISendAsPDFOptionsMaker
 
 logger = logging.getLogger('bda.plone.orders')
 
@@ -120,7 +120,7 @@ def create_mail_listing(context, order_data):
         state_text = ''
         if state == ifaces.STATE_RESERVED:
             state_text = ' ({})'.format(vocabs.state_vocab()[state])
-        line = '{count: 4f} {title}{state} {price}'.format(
+        line = '{count: 4f} x <strong>{title}</strong>    {price}'.format(
             count=booking.attrs['buyable_count'],
             title=title,
             state=state_text,
