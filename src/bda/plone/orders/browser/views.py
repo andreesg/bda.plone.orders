@@ -307,6 +307,7 @@ class TableData(BrowserView):
             "iTotalDisplayRecords": length,
             "aaData": aaData,
         }
+
         return json.dumps(data)
 
 
@@ -723,6 +724,8 @@ class OrderViewBase(BrowserView):
                 'currency': booking.attrs.get('currency'),
                 'state': state,
                 'salaried': salaried,
+                'redeemed': booking.attrs.get('redeemed', ''),
+                'to_redeem': booking.attrs.get('to_redeem', ''),
             })
         return ret
 
@@ -834,6 +837,8 @@ class DirectOrderView(OrderViewBase):
             obj = get_object_by_uid(self.context, booking.attrs['buyable_uid'])
             state = vocabs.state_vocab()[booking.attrs.get('state')]
             salaried = vocabs.salaried_vocab()[booking.attrs.get('salaried')]
+            redeemed = booking.attrs.get('redeemed', '')
+
             ret.append({
                 'title': booking.attrs['title'],
                 'url': obj.absolute_url(),
@@ -846,7 +851,10 @@ class DirectOrderView(OrderViewBase):
                 'currency': booking.attrs.get('currency'),
                 'state': state,
                 'salaried': salaried,
+                'redeemed': redeemed,
+                'to_redeem': booking.attrs.get('to_redeem', '')
             })
+
         return ret
 
     def _form_handler(self, widget, data):

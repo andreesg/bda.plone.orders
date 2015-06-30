@@ -77,6 +77,7 @@
             var target = bdajax.parsetarget(wrapper.attr('ajax:target'));
             target.params['vendor'] = vendor;
             target.params['customer'] = customer;
+
             bdajax.action({
                 name: action,
                 selector: '#orders_wrapper',

@@ -147,7 +147,7 @@
       </p>
     </div>-->
 
-    <div class="order_comment">
+    <!--<div class="order_comment">
       <h3 i18n:translate="order_comment">Order Comment:</h3>
       <p tal:content="order/order_comment.comment"
          tal:condition="order/order_comment.comment">comment</p>
@@ -155,7 +155,7 @@
          i18n:translate="order_no_comment">
         No Comment
       </p>
-    </div>
+    </div>-->
   </div>
 
   <div class="order_bookings">
@@ -178,6 +178,8 @@
             <th i18n:translate="booking_comment">comment</th>
             <th i18n:translate="booking_state">state</th>
             <th i18n:translate="booking_salaried">salaried</th>
+            <th i18n:translate="booking_to_redeem">to redeem</th>
+            <th i18n:translate="booking_redeemed">redeemed</th>
           </tr>
 
           <tr tal:attributes="class python:even and 'even' or 'odd'">
@@ -194,6 +196,8 @@
             <td tal:content="row/comment">comment</td>
             <td tal:content="row/state">state</td>
             <td tal:content="row/salaried">salaried</td>
+            <td tal:content="row/to_redeem">to redeem</td>
+            <td tal:content="row/redeemed">redeemed</td>
           </tr>
 
         </tal:def>
