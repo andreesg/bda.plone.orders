@@ -288,7 +288,7 @@ class TableData(BrowserView):
         columns = self.columns
         colnames = [_['id'] for _ in columns]
 
-        def record2list(record):
+        def record2list(record, title=None, uid=None):
             result = list()
             for colname in colnames:
                 coldef = self.column_def(colname)
@@ -299,8 +299,10 @@ class TableData(BrowserView):
                     value = record.attrs.get(colname, '')
                 result.append(value)
             return result
+        
         for lazyrecord in self.slice(lazydata):
             aaData.append(record2list(lazyrecord()))
+
         data = {
             "sEcho": int(self.request.form['sEcho']),
             "iTotalRecords": soup.storage.length.value,

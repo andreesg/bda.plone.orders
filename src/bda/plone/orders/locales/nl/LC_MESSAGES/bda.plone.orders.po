@@ -309,6 +309,11 @@ msgstr "Gemixt"
 msgid "new"
 msgstr "Nieuw"
 
+#. Default: "New"
+#: vocabularies.py:15
+msgid "redeemed"
+msgstr "Ingeleverd"
+
 #. Default: "No"
 #: browser/views.py:762 vocabularies.py:38
 msgid "no"

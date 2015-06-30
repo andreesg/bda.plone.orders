@@ -178,8 +178,8 @@
             <th i18n:translate="booking_comment">comment</th>
             <th i18n:translate="booking_state">state</th>
             <th i18n:translate="booking_salaried">salaried</th>
-            <th i18n:translate="booking_to_redeem">to redeem</th>
-            <th i18n:translate="booking_redeemed">redeemed</th>
+            <!--<th i18n:translate="booking_to_redeem">to redeem</th>
+            <th i18n:translate="booking_redeemed">redeemed</th>-->
           </tr>
 
           <tr tal:attributes="class python:even and 'even' or 'odd'">
@@ -196,8 +196,8 @@
             <td tal:content="row/comment">comment</td>
             <td tal:content="row/state">state</td>
             <td tal:content="row/salaried">salaried</td>
-            <td tal:content="row/to_redeem">to redeem</td>
-            <td tal:content="row/redeemed">redeemed</td>
+            <!--<td tal:content="row/to_redeem">to redeem</td>
+            <td tal:content="row/redeemed">redeemed</td>-->
           </tr>
 
         </tal:def>

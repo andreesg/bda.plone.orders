@@ -197,6 +197,13 @@ class BookingsCatalogFactory(object):
         salaried_indexer = NodeAttributeIndexer('salaried')
         catalog[u'salaried'] = CatalogFieldIndex(salaried_indexer)
 
+        firstname_indexer = NodeAttributeIndexer('personal_data.firstname')
+        catalog[u'personal_data.firstname'] = \
+            CatalogFieldIndex(firstname_indexer)
+        lastname_indexer = NodeAttributeIndexer('personal_data.lastname')
+        catalog[u'personal_data.lastname'] = \
+            CatalogFieldIndex(lastname_indexer)
+
         # Tickets redeem
         redeemed_indexer = NodeAttributeIndexer('redeemed')
         catalog[u'redeemed'] = CatalogFieldIndex(redeemed_indexer)
@@ -204,7 +211,8 @@ class BookingsCatalogFactory(object):
         to_redeem_indexer = NodeAttributeIndexer('to_redeem')
         catalog[u'to_redeem'] = CatalogFieldIndex(to_redeem_indexer)
 
-        search_attributes = ['uid', 'redeemed', 'title', 'to_redeem']
+        search_attributes = ['uid', 'redeemed', 'title', 'to_redeem', 'personal_data.firstname', 'personal_data.lastname']
+
         text_indexer = NodeTextIndexer(search_attributes)
         catalog[u'text'] = CatalogTextIndex(text_indexer)
         return catalog
@@ -410,10 +418,14 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         booking.attrs['remaining_stock_available'] = available
         booking.attrs['state'] = state
         booking.attrs['salaried'] = ifaces.SALARIED_NO
+
         booking.attrs['redeemed'] = []
-        to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), i) for i in range(count)]
+        to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), (i+1)) for i in range(count)]
         booking.attrs['to_redeem'] = to_redeem
         
+        booking.attrs['personal_data.firstname'] = order.attrs['personal_data.firstname']
+        booking.attrs['personal_data.lastname'] = order.attrs['personal_data.lastname']
+
         booking.attrs['tid'] = 'none'
         shipping_info = queryAdapter(buyable, IShippingItem)
         if shipping_info:
