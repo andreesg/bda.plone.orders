@@ -114,8 +114,12 @@ def create_mail_listing(context, order_data):
         currency = "€"
         # fetch net
         net = booking.attrs['net']
+
+        original_price = (Decimal(str(net))) * 1
+        price_total = original_price + original_price / Decimal(100) * Decimal(str(booking.attrs['vat']))
+        
         # build price
-        price = '%s %0.2f' % (currency, net)
+        price = '%s %0.2f' % (currency, price_total)
         # XXX: discount
         state = booking.attrs.get('state')
         state_text = ''
@@ -347,9 +351,12 @@ def create_mail_body(templates, context, order_data, download_link=None):
     if gender == "male":
         top_salutation = "heer"
         name_salutation = "Dhr."
-    else:
+    elif gender == "female":
         top_salutation = "mevrouw"
         name_salutation = "Mevr."
+    else:
+        top_salutation = "heer/mevrouw"
+        name_salutation = "Dhr./Mevr."
 
     arguments["top_salutation"] = top_salutation
     arguments["name_salutation"] = name_salutation
