@@ -8,6 +8,7 @@ from bda.plone.cart import get_item_data_provider
 from bda.plone.cart import get_item_state
 from bda.plone.cart import get_item_stock
 from bda.plone.cart import get_object_by_uid
+from bda.plone.cart import ascur
 from bda.plone.cart import readcookie
 from bda.plone.checkout import CheckoutAdapter
 from bda.plone.checkout import CheckoutError
@@ -39,6 +40,7 @@ from souper.soup import NodeTextIndexer
 from souper.soup import Record
 from zope.component import queryAdapter
 from zope.interface import implementer
+
 
 import datetime
 import logging

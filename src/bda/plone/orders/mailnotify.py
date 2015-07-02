@@ -353,7 +353,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
 
     arguments["top_salutation"] = top_salutation
     arguments["name_salutation"] = name_salutation
-    arguments["total_price"] = total_price
+    arguments["total_price"] = ascur(total_price)
 
     if download_link != None:
         body_template = templates['ticket']
