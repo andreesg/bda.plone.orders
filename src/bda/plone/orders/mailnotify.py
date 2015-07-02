@@ -119,7 +119,7 @@ def create_mail_listing(context, order_data):
         price_total = original_price + original_price / Decimal(100) * Decimal(str(booking.attrs['vat']))
         
         # build price
-        price = '%s %0.2f' % (currency, price_total)
+        price = '%s %0.2f' % (currency, ascur(price_total))
         # XXX: discount
         state = booking.attrs.get('state')
         state_text = ''
