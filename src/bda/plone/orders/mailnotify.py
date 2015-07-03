@@ -113,14 +113,15 @@ def create_mail_listing(context, order_data):
         # fetch currency
         currency = booking.attrs['currency']
         currency = "€"
+
         # fetch net
         net = booking.attrs['net']
 
-        original_price = (Decimal(str(net))) * 1
+        original_price = (Decimal(net)) * 1
         price_total = original_price + original_price / Decimal(100) * Decimal(str(booking.attrs['vat']))
         
         # build price
-        price = '%s %0.2f' % (currency, ascur(price_total))
+        price = '%s %s' % (currency, ascur(price_total))
         # XXX: discount
         state = booking.attrs.get('state')
         state_text = ''
