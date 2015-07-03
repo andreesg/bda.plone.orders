@@ -21,6 +21,7 @@ from plone import api
 from zope.component.hooks import getSite
 from zope.globalrequest import getRequest
 from zope.i18n import translate
+from decimal import Decimal
 
 import logging
 import textwrap
