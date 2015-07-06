@@ -23,7 +23,7 @@ ORDER_TICKET_EN = """\
 <html>
     <head></head>
     <body>
-        <p><strong>PLEASE DO NOT FORGET TO PRINT YOUR E-TICKETS:</strong><br>
+        <p><strong>Please do not forget to print your E-Tickets:</strong><br>
         <a href="%(download_link)s">Download your tickets</a></p>
 
         <p>Dear %(top_salutation)s,<br>
@@ -54,7 +54,7 @@ ORDER_TICKET_NL = """\
 <html>
     <head></head>
     <body>
-        <p><strong>VERGEET NIET UW E-TICKET(S) EN DEZE E-MAIL TE PRINTEN:</strong><br>
+        <p><strong>Vergeet niet uw E-Ticket(s) en deze E-mail te printen:</strong><br>
         <a href="%(download_link)s">Download E-tickets</a></p>
 
         <p>Geachte %(top_salutation)s,<br>
@@ -89,7 +89,6 @@ Ordernumber: %(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
 Phone: %(personal_data.phone)s
 Email: %(personal_data.email)s
 

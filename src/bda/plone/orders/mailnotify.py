@@ -69,8 +69,10 @@ class MailNotify(object):
             mailfrom = formataddr((from_name, shop_manager_address))
         else:
             mailfrom = shop_manager_address
-    
-        if self.download_link != None:
+
+        tickets = 'tickets' in self.context.absolute_url()
+
+        if self.download_link != None and self.download_link != "" and tickets:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
             msg['From'] = mailfrom
@@ -99,6 +101,9 @@ def _indent(text, ind=5, width=80):
 def create_mail_listing(context, order_data):
     """Create item listing for notification mail.
     """
+
+    tickets = '/tickets' in context.absolute_url()
+
     lines = []
     for booking in order_data.bookings:
         brain = get_catalog_brain(context, booking.attrs['buyable_uid'])
@@ -127,13 +132,23 @@ def create_mail_listing(context, order_data):
         state_text = ''
         if state == ifaces.STATE_RESERVED:
             state_text = ' ({})'.format(vocabs.state_vocab()[state])
-        line = '{count: 4f} x <strong>{title}</strong>    {price}'.format(
-            count=booking.attrs['buyable_count'],
-            title=title,
-            state=state_text,
-            price=price,
-        )
+
+        if tickets:
+            line = '{count: 4f} x <strong>{title}</strong>    {price}'.format(
+                count=booking.attrs['buyable_count'],
+                title=title,
+                state=state_text,
+                price=price,
+            )
+        else:
+            line = '{count: 4f} x {title}    {price}'.format(
+                count=booking.attrs['buyable_count'],
+                title=title,
+                state=state_text,
+                price=price,
+            )
         lines.append(line)
+        
         if comment:
             lines.append(_indent('({0})'.format(comment)))
         notificationtext = IItemNotificationText(buyable)
@@ -348,6 +363,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
     payment_text_callback = templates['payment_text_callback']
     arguments['payment_text'] = payment_text_callback(context, order_data)
 
+    # Salutation fix
     gender = attrs['personal_data.gender']
     top_salutation = ""
     if gender == "male":
@@ -364,7 +380,19 @@ def create_mail_body(templates, context, order_data, download_link=None):
     arguments["name_salutation"] = name_salutation
     arguments["total_price"] = ascur(total_price)
 
-    if download_link != None:
+    #
+    # Check tickets    
+    #
+    tickets = "/tickets" in context.absolute_url()
+
+    if download_link != None and download_link != "" and tickets:
+        if download_link == "done":
+            base_url = context.portal_url()
+            language = context.language
+            params = "?order_id=%s" %(str(attrs['uid']))
+            download_as_pdf_link = "%s/%s/download_as_pdf?page_url=%s/%s/tickets/etickets%s" %(base_url, language, base_url, language, params)
+            download_link = download_as_pdf_link
+
         body_template = templates['ticket']
         arguments["download_link"] = download_link
     else:
@@ -375,8 +403,10 @@ def create_mail_body(templates, context, order_data, download_link=None):
 
 def do_notify(context, order_data, templates, receiver, download_link=None):
     attrs = order_data.order.attrs
+    
+    tickets = '/tickets' in context.absolute_url()
 
-    if download_link != None:
+    if download_link != None and tickets:
         subject = templates['ticket_subject']
     else:
         subject = templates['subject'] % attrs['ordernumber']

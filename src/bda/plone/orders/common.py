@@ -249,8 +249,13 @@ class OrdersCatalogFactory(object):
                              'personal_data.firstname',
                              'billing_address.city',
                              'ordernumber']
+        
+        email_indexer = NodeAttributeIndexer('email_sent')
+        catalog[u'email_sent'] = CatalogFieldIndex(email_indexer)
+
         text_indexer = NodeTextIndexer(search_attributes)
         catalog[u'text'] = CatalogTextIndex(text_indexer)
+
         return catalog
 
 
@@ -276,8 +281,13 @@ class OrderCheckoutAdapter(CheckoutAdapter):
     def save(self, providers, widget, data):
         super(OrderCheckoutAdapter, self).save(providers, widget, data)
         order = self.order
+        
         # order UUID
         uid = order.attrs['uid'] = uuid.uuid4()
+
+        # Email sent
+        order.attrs['email_sent'] = False
+
         # order creator
         creator = None
         member = plone.api.user.get_current()
