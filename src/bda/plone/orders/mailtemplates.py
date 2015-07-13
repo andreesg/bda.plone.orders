@@ -107,6 +107,34 @@ Ordered items:
 %(order_summery)s%(global_text)s%(payment_text)s
 """
 
+ORDER_BODY_NL = """
+
+Datum: 06.07.2015 16:46
+
+Bedankt voor uw bestelling:
+
+Bestelnummer: %(ordernumber)s
+
+Persoonsgegevens:
+Naam: %(personal_data.lastname)s
+Telefoonnummer:  %(personal_data.phone)s
+Email: %(personal_data.email)s
+
+Adres:
+Straat: %(billing_address.street)s
+Postcode: %(billing_address.zip)s
+Stad: %(billing_address.city)s
+Land: %(billing_address.country)s
+%(delivery_address)s
+Opmerkingen:
+%(order_comment.comment)s
+
+Bestelde producten:
+%(item_listing)s
+
+%(order_summery)s%(global_text)s%(payment_text)s
+"""
+
 RESERVATION_BODY_EN = """
 Date: %(date)s
 
@@ -460,7 +488,7 @@ ORDER_TEMPLATES = {
     'nl': {
         'ticket_subject': ORDER_TICKET_SUBJECT_NL,
         'subject': ORDER_SUBJECT_EN,
-        'body': ORDER_BODY_EN,
+        'body': ORDER_BODY_NL,
         'ticket': ORDER_TICKET_NL,
         'delivery_address': DELIVERY_ADDRESS_EN},
     'en': {

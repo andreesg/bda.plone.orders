@@ -30,7 +30,12 @@ import smtplib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
+
 from collective.sendaspdf.interfaces import ISendAsPDFOptionsMaker
+import urllib2
+import cookielib
 
 logger = logging.getLogger('bda.plone.orders')
 
@@ -49,6 +54,15 @@ def dispatch_notify_payment_success(event):
     for func in NOTIFICATIONS['payment_success']:
         func(event)
 
+
+def download_file(url):
+    cj = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
+    request = urllib2.Request(url)
+    f = opener.open(request)
+    data = f.read()
+    return data
 
 class MailNotify(object):
     """Mail notifyer.
@@ -77,10 +91,17 @@ class MailNotify(object):
             msg['Subject'] = subject
             msg['From'] = mailfrom
             msg['To'] = receiver
+
             msg.attach(MIMEText(message, 'html', 'utf-8'))
+            data = download_file(self.download_link)
+            pdfAttachment = MIMEApplication(data, _subtype = "pdf")
+            pdfAttachment.add_header('content-disposition', 'attachment', filename = ('utf-8', '', 'e-tickets.pdf'))
+
+            msg.attach(pdfAttachment)
 
             s = smtplib.SMTP('localhost')
             s.sendmail(mailfrom, receiver, msg.as_string())
+
             s.quit()
         else:
             api.portal.send_email(
