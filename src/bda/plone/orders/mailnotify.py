@@ -22,10 +22,10 @@ from zope.component.hooks import getSite
 from zope.globalrequest import getRequest
 from zope.i18n import translate
 from decimal import Decimal
-
+import requests
 import logging
 import textwrap
-
+import uuid
 import smtplib
 
 from email.mime.multipart import MIMEMultipart
@@ -54,14 +54,26 @@ def dispatch_notify_payment_success(event):
     for func in NOTIFICATIONS['payment_success']:
         func(event)
 
+def download_files(url):
+    r = requests.get(url, stream=True)
+    path = "/tmp/%s" %(str(uuid.uuid1()))
+    f = open(path, 'wb+')
+    for chunk in r.iter_content(chunk_size=1024): 
+        if chunk:
+            f.write(chunk)
+            f.flush()
+
+    return f.read()
 
 def download_file(url):
+    print "download file"
     cj = cookielib.CookieJar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
     request = urllib2.Request(url)
     f = opener.open(request)
     data = f.read()
+    print "file downloaded"
     return data
 
 class MailNotify(object):
@@ -93,7 +105,7 @@ class MailNotify(object):
             msg['To'] = receiver
 
             msg.attach(MIMEText(message, 'html', 'utf-8'))
-            data = download_file(self.download_link)
+            data = download_files(self.download_link)
             pdfAttachment = MIMEApplication(data, _subtype = "pdf")
             pdfAttachment.add_header('content-disposition', 'attachment', filename = ('utf-8', '', 'e-tickets.pdf'))
 
