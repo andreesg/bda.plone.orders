@@ -27,6 +27,7 @@ import logging
 import textwrap
 import uuid
 import smtplib
+import datetime
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -65,23 +66,53 @@ def download_files(url):
 
     return f.read()
 
-def download_file(url):
-    cj = cookielib.CookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
-    request = urllib2.Request(url)
-    f = opener.open(request)
-    data = f.read()
-    return data
-
 class MailNotify(object):
     """Mail notifyer.
     """
 
-    def __init__(self, context, download_link=None):
+    def __init__(self, context, download_link=None, order_data=None):
         self.context = context
         self.settings = INotificationSettings(self.context)
         self.download_link = download_link
+        self.order_data = order_data
+
+    def download_file(self):
+        cj = cookielib.CookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
+        request = urllib2.Request(url)
+        try:
+            f = opener.open(request, timeout=20)
+            data = f.read()
+        except:
+            raise
+        return data
+
+    def send_failed(self, data):
+        receiver = "andre@itsnotthatkind.org"
+        mailfrom = "andre@intk.com"
+        timestamp = datetime.datetime.today().isoformat()
+
+        if data != None:
+            order_uid = data.attrs['uid']
+            ordernumber = data.attrs['ordernumber']
+            first_name = data.attrs['personal_data.firstname']
+            last_name = data.attrs['personal_data.lastname']
+            phone = data.attrs['personal_data.phone']
+            email = data.attrs['personal_data.email']
+
+            subject = "Order %s failed to generate pdf." %(ordernumber)
+            message = "\n[%s] Ordernumber %s\nOrder uid: %s\n\nPersonal details:\nFirst name: %s\nLast name: %s\nPhone: %s\nE-mail: %s" %(str(timestamp), ordernumber, order_uid, first_name, last_name, phone, email)
+        else:
+            subject = "Order Unknown failed to generate pdf."
+            message = "Order unknown failed to generate pdf.\nTimestamp: %s" %(str(timestamp))
+
+        api.portal.send_email(
+            recipient=receiver,
+            sender=mailfrom,
+            subject=subject,
+            body=message
+        )
 
     def send(self, subject, message, receiver):
         shop_manager_address = self.settings.admin_email
@@ -108,13 +139,14 @@ class MailNotify(object):
 
             try:
                 link = self.download_link.replace("http://teylersmuseum-soft.intk.com/", "http://teylersmuseum-soft.intk.com:14082/NewTeylers/")
-                data = download_file(link)
+                data = self.download_file(link)
 
                 pdfAttachment = MIMEApplication(data, _subtype = "pdf")
                 pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
 
                 msg.attach(pdfAttachment)
             except:
+                self.send_failed(self.order_data.order)
                 pass
 
             s = smtplib.SMTP('localhost')
@@ -452,7 +484,7 @@ def do_notify(context, order_data, templates, receiver, download_link=None):
     
 
     message, download_link_pdf = create_mail_body(templates, context, order_data, download_link)
-    mail_notify = MailNotify(context, download_link_pdf)
+    mail_notify = MailNotify(context, download_link_pdf, order_data)
     
     try:
         mail_notify.send(subject, message, receiver)
