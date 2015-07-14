@@ -56,7 +56,7 @@ def dispatch_notify_payment_success(event):
 
 def download_files(url):
     r = requests.get(url, stream=True)
-    path = "/tmp/%s" %(str(uuid.uuid1()))
+    path = "/tmp/%s.pdf" %(str(uuid.uuid1()))
     f = open(path, 'wb+')
     for chunk in r.iter_content(chunk_size=1024): 
         if chunk:
@@ -66,14 +66,12 @@ def download_files(url):
     return f.read()
 
 def download_file(url):
-    print "download file"
     cj = cookielib.CookieJar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
     request = urllib2.Request(url)
     f = opener.open(request)
     data = f.read()
-    print "file downloaded"
     return data
 
 class MailNotify(object):
@@ -99,17 +97,25 @@ class MailNotify(object):
         tickets = 'tickets' in self.context.absolute_url()
 
         if self.download_link != None and self.download_link != "" and tickets:
-            msg = MIMEMultipart('alternative')
+            text = MIMEMultipart('alternative')
+            msg = MIMEMultipart('mixed')
             msg['Subject'] = subject
             msg['From'] = mailfrom
             msg['To'] = receiver
 
-            msg.attach(MIMEText(message, 'html', 'utf-8'))
-            data = download_files(self.download_link)
-            pdfAttachment = MIMEApplication(data, _subtype = "pdf")
-            pdfAttachment.add_header('content-disposition', 'attachment', filename = ('utf-8', '', 'e-tickets.pdf'))
+            text.attach(MIMEText(message, 'html', 'utf-8'))
+            msg.attach(text)
 
-            msg.attach(pdfAttachment)
+            try:
+                link = self.download_link.replace("http://teylersmuseum-soft.intk.com/", "http://teylersmuseum-soft.intk.com:14082/NewTeylers/")
+                data = download_file(link)
+
+                pdfAttachment = MIMEApplication(data, _subtype = "pdf")
+                pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
+
+                msg.attach(pdfAttachment)
+            except:
+                pass
 
             s = smtplib.SMTP('localhost')
             s.sendmail(mailfrom, receiver, msg.as_string())
@@ -431,7 +437,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
     else:
         body_template = templates['body']
 
-    return body_template % arguments
+    return body_template % arguments, download_link
 
 
 def do_notify(context, order_data, templates, receiver, download_link=None):
@@ -444,8 +450,9 @@ def do_notify(context, order_data, templates, receiver, download_link=None):
     else:
         subject = templates['subject'] % attrs['ordernumber']
     
-    message = create_mail_body(templates, context, order_data, download_link)
-    mail_notify = MailNotify(context, download_link)
+
+    message, download_link_pdf = create_mail_body(templates, context, order_data, download_link)
+    mail_notify = MailNotify(context, download_link_pdf)
     
     try:
         mail_notify.send(subject, message, receiver)

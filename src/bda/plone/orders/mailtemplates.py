@@ -80,6 +80,32 @@ ORDER_TICKET_NL = """\
 </html>
 """
 
+ORDER_TICKET_EN = """\
+<html>
+    <head></head>
+    <body>
+        <p>Thank you very much for your order. We look forward welcoming you. Please find your tickets attached in this e-mail.</p>
+
+        <p>For questions on your order you can contact info@teylersmuseum.nl.</p>
+
+        <p>The website of the Teylers Museum contains an immense amount of background and topical information. If you would like to prepare your visit in advance, have a look at <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> or join us on social media.</p>
+    </body>
+</html>
+"""
+
+ORDER_TICKET_NL = """\
+<html>
+    <head></head>
+    <body>
+        <p>Hartelijk bedankt voor uw bestelling. Uw tickets zijn bijgevoegd in de bijlage. Wij kijken zeer uit naar uw komst.</p>
+
+        <p>Heeft u vragen over uw bestelling, neem dan contact opnemen met info@teylersmuseum.nl.</p>
+
+        <p>De website van het Teylers Museum bevat veel achtergrond- en actuele informatie. Mocht u alvast uw bezoek willen voorbereiden gaat u dan naar <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
+    </body>
+</html>
+"""
+
 ORDER_BODY_EN = """
 Date: %(date)s
 
