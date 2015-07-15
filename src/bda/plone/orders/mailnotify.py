@@ -147,7 +147,7 @@ class MailNotify(object):
                 msg.attach(pdfAttachment)
             except:
                 self.send_failed(self.order_data.order)
-                pass
+                raise
 
             s = smtplib.SMTP('localhost')
             s.sendmail(mailfrom, receiver, msg.as_string())
