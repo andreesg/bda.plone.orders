@@ -151,7 +151,6 @@ class MailNotify(object):
 
             s = smtplib.SMTP('localhost')
             s.sendmail(mailfrom, receiver, msg.as_string())
-
             s.quit()
         else:
             api.portal.send_email(
