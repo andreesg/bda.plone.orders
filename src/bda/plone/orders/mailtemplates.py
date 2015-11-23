@@ -135,7 +135,7 @@ Ordered items:
 
 ORDER_BODY_NL = """
 
-Datum: 06.07.2015 16:46
+Datum: %(date)s
 
 Bedankt voor uw bestelling:
 
