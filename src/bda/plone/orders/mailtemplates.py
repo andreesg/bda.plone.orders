@@ -142,7 +142,7 @@ Bedankt voor uw bestelling:
 Bestelnummer: %(ordernumber)s
 
 Persoonsgegevens:
-Naam: %(personal_data.lastname)s
+Naam: %(personal_data.firstname)s %(personal_data.lastname)s
 Telefoonnummer:  %(personal_data.phone)s
 Email: %(personal_data.email)s
 
