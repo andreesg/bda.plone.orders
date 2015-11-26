@@ -134,31 +134,41 @@ Ordered items:
 """
 
 ORDER_BODY_NL = """
+<html>
+    <head></head>
+    <body>
+        <p>Datum: %(date)s</p>
 
-Datum: %(date)s
+        <p>Bedankt voor uw bestelling:</p>
 
-Bedankt voor uw bestelling:
+        <p>Bestelnummer: %(ordernumber)s<p>
 
-Bestelnummer: %(ordernumber)s
+        <p>Persoonsgegevens:<br>
+        Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        Telefoonnummer:  %(personal_data.phone)s<br>
+        Email: %(personal_data.email)s<p>
 
-Persoonsgegevens:
-Naam: %(personal_data.firstname)s %(personal_data.lastname)s
-Telefoonnummer:  %(personal_data.phone)s
-Email: %(personal_data.email)s
+        <p>Adres:<br>
+        Straat: %(billing_address.street)s<br>
+        Postcode: %(billing_address.zip)s<br>
+        Stad: %(billing_address.city)s<br>
+        Land: %(billing_address.country)s<br>
+        %(delivery_address)s<br>
+        Opmerkingen:<br>
+        %(order_comment.comment)s</p>
 
-Adres:
-Straat: %(billing_address.street)s
-Postcode: %(billing_address.zip)s
-Stad: %(billing_address.city)s
-Land: %(billing_address.country)s
-%(delivery_address)s
-Opmerkingen:
-%(order_comment.comment)s
+        <p>Bestelde producten:<br>
+        %(item_listing)s</p>
 
-Bestelde producten:
-%(item_listing)s
+        <p>%(order_summery)s%(global_text)s%(payment_text)s<br>
+        Status bestelling: betaald</p>
 
-%(order_summery)s%(global_text)s%(payment_text)s
+        <p>Uw bestelling wordt binnen 3-5 werkdagen verstuurd.<br>
+        Heeft u vragen over uw bestelling? Kijk dan in onze<br>
+        <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/algemene-voorwaarden/'>algemene voorwaarden</a></p>
+</body>
+</html>
+
 """
 
 RESERVATION_BODY_EN = """

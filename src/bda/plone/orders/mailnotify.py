@@ -153,12 +153,25 @@ class MailNotify(object):
             s.sendmail(mailfrom, receiver, msg.as_string())
             s.quit()
         else:
-            api.portal.send_email(
+            text = MIMEMultipart('alternative')
+            msg = MIMEMultipart('mixed')
+            msg['Subject'] = subject
+            msg['From'] = mailfrom
+            msg['To'] = receiver
+
+            text.attach(MIMEText(message, 'html', 'utf-8'))
+            msg.attach(text)
+
+            s = smtplib.SMTP('localhost')
+            s.sendmail(mailfrom, receiver, msg.as_string())
+            s.quit()
+
+            """api.portal.send_email(
                 recipient=receiver,
                 sender=mailfrom,
                 subject=subject,
                 body=message
-            )
+            )"""
 
 
 
