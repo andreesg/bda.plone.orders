@@ -38,7 +38,7 @@ from collective.sendaspdf.interfaces import ISendAsPDFOptionsMaker
 import urllib2
 import cookielib
 
-from bda.shop.checkout.vocabularies import get_pycountry_name
+from bda.plone.checkout.vocabularies import get_pycountry_name
 
 logger = logging.getLogger('bda.plone.orders')
 
@@ -264,6 +264,7 @@ def create_order_summery(context, order_data):
     request = getRequest()
     # currency
     currency = order_data.currency
+    currency = "€"
     # cart net and vat
     cart_net = order_data.net
     if cart_net:
@@ -373,8 +374,9 @@ def create_order_summery(context, order_data):
     lines.append(translate(order_summary_cart_total, context=request))
     summary_title = translate(
         _('order_summary_label', default=u'Summary:'), context=request)
-    summary_text = '\n' + '\n'.join([safe_encode(line) for line in lines])
-    return '\n' + safe_encode(summary_title) + summary_text + '\n'
+    
+    summary_text = '<br>' + '<br>'.join([safe_encode(line) for line in lines])
+    return '<br>' + safe_encode(summary_title) + summary_text + '<br>'
 
 
 def create_global_text(context, order_data):
