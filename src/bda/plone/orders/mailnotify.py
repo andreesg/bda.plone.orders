@@ -38,6 +38,8 @@ from collective.sendaspdf.interfaces import ISendAsPDFOptionsMaker
 import urllib2
 import cookielib
 
+from bda.shop.checkout.vocabularies import get_pycountry_name
+
 logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {
@@ -247,7 +249,7 @@ def create_mail_listing(context, order_data):
     if tickets:
         return '<br>'.join([safe_encode(l) for l in lines])
     else:
-        return '\n'.join([safe_encode(l) for l in lines])
+        return '<br>'.join([safe_encode(l) for l in lines])
 
 
 def create_order_summery(context, order_data):
