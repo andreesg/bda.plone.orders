@@ -474,7 +474,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
     except:
         country_name = original_country
 
-    arguments["country_fixed"] = country_name
+    arguments["country_fixed"] = country_name.encode('ascii', 'ignore')
     arguments["top_salutation"] = top_salutation
     arguments["name_salutation"] = name_salutation
     arguments["total_price"] = ascur(total_price)
