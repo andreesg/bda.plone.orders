@@ -161,7 +161,7 @@ ORDER_BODY_NL = """
         %(item_listing)s</p>
 
         <p>%(order_summery)s%(global_text)s%(payment_text)s<br>
-        Status bestelling: betaald</p>
+        Status bestelling: Betaald</p>
 
         <p>Uw bestelling wordt binnen 3-5 werkdagen verstuurd.<br>
         Heeft u vragen over uw bestelling? Kijk dan in onze<br>
