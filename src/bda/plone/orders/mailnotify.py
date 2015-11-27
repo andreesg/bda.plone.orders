@@ -264,7 +264,7 @@ def create_order_summery(context, order_data):
     request = getRequest()
     # currency
     currency = order_data.currency
-    currency = "€"
+
     # cart net and vat
     cart_net = order_data.net
     if cart_net:
