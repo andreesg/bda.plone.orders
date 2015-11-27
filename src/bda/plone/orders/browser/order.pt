@@ -39,7 +39,7 @@
       <span tal:replace="order/personal_data.phone">phone</span>
     </div>
 
-    <!--<div class="billing_address">
+  <div class="billing_address">
       <h3 i18n:translate="billing_address">Billing Address:</h3>
       <strong i18n:translate="order_street">Street:</strong>
       <span tal:replace="order/billing_address.street">street</span>
@@ -52,7 +52,7 @@
       <span tal:replace="python:view.country(order['billing_address.country'])">
         country
       </span>
-    </div>-->
+    </div>
   </div>
 
   <div class="order_details_row">

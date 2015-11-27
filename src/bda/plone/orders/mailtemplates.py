@@ -122,7 +122,7 @@ Address:
 Street: %(billing_address.street)s
 ZIP: %(billing_address.zip)s
 City: %(billing_address.city)s
-Country: %(billing_address.country)s
+Country: %(country_fixed)s
 %(delivery_address)s
 Comment:
 %(order_comment.comment)s
@@ -152,7 +152,7 @@ ORDER_BODY_NL = """
         Straat: %(billing_address.street)s<br>
         Postcode: %(billing_address.zip)s<br>
         Stad: %(billing_address.city)s<br>
-        Land: %(billing_address.country)s<br>
+        Land: %(country_fixed)s<br>
         %(delivery_address)s<br>
         Opmerkingen:<br>
         %(order_comment.comment)s</p>
@@ -181,7 +181,6 @@ Reservation details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
 Phone: %(personal_data.phone)s
 Email: %(personal_data.email)s
 
@@ -203,7 +202,6 @@ Ordered items:
 DELIVERY_ADDRESS_EN = """
 Delivery Address:
 Name: %(delivery_address.firstname)s %(delivery_address.lastname)s
-Company: %(delivery_address.company)s
 Street: %(delivery_address.street)s
 ZIP: %(delivery_address.zip)s
 City: %(delivery_address.city)s
