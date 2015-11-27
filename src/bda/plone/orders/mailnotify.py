@@ -376,7 +376,7 @@ def create_order_summery(context, order_data):
         _('order_summary_label', default=u'Summary:'), context=request)
     
     summary_text = '<br>'.join([safe_encode(line) for line in lines])
-    return safe_encode(summary_title) + '<br>' summary_text
+    return safe_encode(summary_title) + '<br>' + summary_text
 
 
 def create_global_text(context, order_data):
