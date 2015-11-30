@@ -264,6 +264,7 @@ def create_order_summery(context, order_data):
     request = getRequest()
     # currency
     currency = order_data.currency
+    currency = u"€"
 
     # cart net and vat
     cart_net = order_data.net
@@ -271,22 +272,13 @@ def create_order_summery(context, order_data):
         # cart net
         order_summary_cart_net = _(
             'order_summary_cart_net',
-            default=u'Net: ${value} ${currency}',
+            default=u'Net: ${currency} ${value} ',
             mapping={
                 'value': ascur(cart_net),
                 'currency': currency,
             })
         lines.append(translate(order_summary_cart_net, context=request))
-        # cart vat
-        cart_vat = order_data.vat
-        order_summary_cart_vat = _(
-            'order_summary_cart_vat',
-            default=u'VAT: ${value} ${currency}',
-            mapping={
-                'value': ascur(cart_vat),
-                'currency': currency,
-            })
-        lines.append(translate(order_summary_cart_vat, context=request))
+        
     # cart discount
     discount_net = order_data.discount_net
     if discount_net:
@@ -357,12 +349,23 @@ def create_order_summery(context, order_data):
         shipping_total = shipping_net + shipping_vat
         order_summary_shipping_total = _(
             'order_summary_shipping_total',
-            default=u'Shipping Total: ${value} ${currency}',
+            default=u'Shipping Total: ${currency} ${value} ',
             mapping={
                 'value': ascur(shipping_total),
                 'currency': currency,
             })
         lines.append(translate(order_summary_shipping_total, context=request))
+    else:
+        shipping_total = 0
+        order_summary_shipping_total = _(
+            'order_summary_shipping_total',
+            default=u'Shipping Total: ${currency} ${value} ',
+            mapping={
+                'value': ascur(shipping_total),
+                'currency': currency,
+            })
+        lines.append(translate(order_summary_shipping_total, context=request))
+
     # cart total
     order_summary_cart_total = _(
         'order_summary_cart_total',
@@ -371,12 +374,25 @@ def create_order_summery(context, order_data):
             'value': ascur(cart_total),
             'currency': currency,
         })
+
     lines.append(translate(order_summary_cart_total, context=request))
+
+    # cart vat
+    cart_vat = order_data.vat
+    order_summary_cart_vat = _(
+        'order_summary_cart_vat',
+        default=u'VAT: ${currency} ${value} ',
+        mapping={
+            'value': ascur(cart_vat),
+            'currency': currency,
+        })
+    lines.append(translate(order_summary_cart_vat, context=request))
+
     summary_title = translate(
         _('order_summary_label', default=u'Summary:'), context=request)
     
     summary_text = '<br>'.join([safe_encode(line) for line in lines])
-    return safe_encode(summary_title) + '<br>' + summary_text
+    return '<br>' + summary_text
 
 
 def create_global_text(context, order_data):
@@ -475,6 +491,10 @@ def create_mail_body(templates, context, order_data, download_link=None):
         country_name = original_country
 
     arguments["country_fixed"] = country_name.encode('ascii', 'ignore')
+    ## TODO
+    if arguments["country_fixed"] == "Netherlands":
+        arguments["country_fixed"] = "Nederland"
+
     arguments["top_salutation"] = top_salutation
     arguments["name_salutation"] = name_salutation
     arguments["total_price"] = ascur(total_price)

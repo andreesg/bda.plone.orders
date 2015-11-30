@@ -17,6 +17,8 @@ ORDER_TICKET_SUBJECT_NL = u"Teylers Museum E-tickets"
 
 ORDER_SUBJECT_EN = u'Order %s received.'
 
+ORDER_SUBJECT_NL = u'Bevestiging van je bestelling %s.'
+
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
 ORDER_TICKET_EN = """\
@@ -134,6 +136,47 @@ Ordered items:
 """
 
 ORDER_BODY_NL = """
+<html>
+    <head></head>
+    <body>
+        <p>Beste %(personal_data.firstname)s,</p>
+
+        <p>Hartelijk bedankt voor je bestelling %(ordernumber)s bij Teylers Museum.<br>
+        Je bestelling wordt standaard met TPG Post binnen 3-5 werkdagen verstuurd. </p>
+
+        <p>Je hebt betaaldmet: %(payment_method)s<br>
+
+        <p>Uw bestelling wordt verzonden naar het onderstaande adres:</p>
+        <p>Persoonsgegevens:</p>
+        Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        Telefoonnummer:  %(personal_data.phone)s<br>
+        Email: %(personal_data.email)s<p>
+
+        <p>Adres:<br>
+        Straat: %(billing_address.street)s<br>
+        Postcode: %(billing_address.zip)s<br>
+        Stad: %(billing_address.city)s<br>
+        Land: %(country_fixed)s<br>
+        %(delivery_address)s<br></p>
+
+        <p>Hieronder vindt u een overzicht van uw bestelling:<br>
+        Opmerkingen:<br>
+        %(order_comment.comment)s</p>
+
+        <p>Bestelde producten:<br>
+        %(item_listing)s</p>
+        <p>%(order_summery)s%(global_text)s%(payment_text)s</p>
+
+        <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
+        Kijk op onze website voor<a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/algemene-voorwaarden/'>meer informatie</a> of naar:<br>
+        webshop@teylersmuseum.nl</p>
+</body>
+</html>
+
+"""
+
+
+ORDER_BODY_NL_OLD = """
 <html>
     <head></head>
     <body>
@@ -521,7 +564,7 @@ Land: %(delivery_address.country)s
 ORDER_TEMPLATES = {
     'nl': {
         'ticket_subject': ORDER_TICKET_SUBJECT_NL,
-        'subject': ORDER_SUBJECT_EN,
+        'subject': ORDER_SUBJECT_NL,
         'body': ORDER_BODY_NL,
         'ticket': ORDER_TICKET_NL,
         'delivery_address': DELIVERY_ADDRESS_EN},

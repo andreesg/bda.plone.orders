@@ -501,7 +501,7 @@ msgstr "Totaal: ${value} ${currency}"
 #. Default: "VAT: ${value} ${currency}"
 #: mailnotify.py:107
 msgid "order_summary_cart_vat"
-msgstr "BTW: ${value} ${currency}"
+msgstr "incl BTW: ${currency} ${value}"
 
 #. Default: "Discount Net: ${value} ${currency}"
 #: mailnotify.py:119
@@ -536,7 +536,7 @@ msgstr "Verzending netto: ${value} ${currency}"
 #. Default: "Shipping Total: ${value} ${currency}"
 #: mailnotify.py:183
 msgid "order_summary_shipping_total"
-msgstr "Verzending totaal: ${value} ${currency}"
+msgstr "Verzendkosten: ${currency} ${value} "
 
 #. Default: "Shipping VAT: ${value} ${currency}"
 #: mailnotify.py:173
