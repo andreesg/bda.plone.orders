@@ -146,13 +146,13 @@ ORDER_BODY_NL = """
 
         <p>Je hebt betaaldmet: %(payment_selection)s<br>
 
-        <p>Uw bestelling wordt verzonden naar het onderstaande adres:</p>
-        <br>Persoonsgegevens:
+        <p>Uw bestelling wordt verzonden naar het onderstaande adres:
+        <br>Persoonsgegevens:<br>
         Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
         Telefoonnummer:  %(personal_data.phone)s<br>
-        Email: %(personal_data.email)s<p>
+        Email: %(personal_data.email)s<br>
 
-        <p>Adres:<br>
+        Adres:<br>
         Straat: %(billing_address.street)s<br>
         Postcode: %(billing_address.zip)s<br>
         Stad: %(billing_address.city)s<br>
@@ -164,7 +164,7 @@ ORDER_BODY_NL = """
         %(order_comment.comment)s</p>
 
         <p>Bestelde producten:<br>
-        %(item_listing)s</p>
+        %(item_listing)s
         %(order_summery)s%(global_text)s%(payment_text)s</p>
 
         <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>

@@ -306,7 +306,10 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             pid = data.fetch(payment_param).extracted
             payment = Payments(self.context).get(pid)
             order.attrs['payment_method'] = pid
-            order.attrs['payment_selection'] = p_selection
+            if p_selection == 'ideal':
+                order.attrs['payment_selection'] = 'iDeal'
+            else:
+                order.attrs['payment_selection'] = p_selection
             if payment:
                 order.attrs['payment_label'] = payment.label
             else:
