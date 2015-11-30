@@ -288,12 +288,12 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # Email sent
         
         try:
-            if order.attrs['email_sent']:
-                order.attrs['email_sent'] = True
+            if order.attrs['email_sent'] == 'yes':
+                order.attrs['email_sent'] = 'yes'
             else:
-                order.attrs['email_sent'] = False
+                order.attrs['email_sent'] = 'no'
         except:
-            order.attrs['email_sent'] = False
+            order.attrs['email_sent'] = 'no'
 
 
         # order creator
