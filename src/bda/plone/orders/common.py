@@ -302,10 +302,11 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         if cart_data.total > Decimal(0):
             payment_param = 'checkout.payment_selection.payment'
             payment_selection = 'checkout.payment_method_selection.payment_method'
+            p_selection = data.fetch(payment_selection).extracted
             pid = data.fetch(payment_param).extracted
             payment = Payments(self.context).get(pid)
             order.attrs['payment_method'] = pid
-            order.attrs['payment_selection'] = payment_selection
+            order.attrs['payment_selection'] = p_selection
             if payment:
                 order.attrs['payment_label'] = payment.label
             else:
