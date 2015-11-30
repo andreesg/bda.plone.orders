@@ -286,7 +286,15 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         uid = order.attrs['uid'] = uuid.uuid4()
 
         # Email sent
-        order.attrs['email_sent'] = False
+        
+        try:
+            if order.attrs['email_sent']:
+                order.attrs['email_sent'] = True
+            else:
+                order.attrs['email_sent'] = False
+        except:
+            order.attrs['email_sent'] = False
+
 
         # order creator
         creator = None
