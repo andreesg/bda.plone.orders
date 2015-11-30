@@ -491,12 +491,12 @@ msgstr "Besteloverzicht:"
 #. Default: "Net: ${value} ${currency}"
 #: mailnotify.py:97
 msgid "order_summary_cart_net"
-msgstr "Netto: ${value} ${currency}"
+msgstr "Subtotaal: ${currency} ${value} "
 
 #. Default: "Total: ${value} ${currency}"
 #: mailnotify.py:192
 msgid "order_summary_cart_total"
-msgstr "Totaal: ${value} ${currency}"
+msgstr "Totaal: ${currency} ${value}"
 
 #. Default: "VAT: ${value} ${currency}"
 #: mailnotify.py:107

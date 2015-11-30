@@ -369,7 +369,7 @@ def create_order_summery(context, order_data):
     # cart total
     order_summary_cart_total = _(
         'order_summary_cart_total',
-        default=u'Total: ${value} ${currency}',
+        default=u'Total: ${currency} ${value}',
         mapping={
             'value': ascur(cart_total),
             'currency': currency,

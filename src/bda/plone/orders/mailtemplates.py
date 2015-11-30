@@ -150,9 +150,9 @@ ORDER_BODY_NL = """
         <br>Persoonsgegevens:<br>
         Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
         Telefoonnummer:  %(personal_data.phone)s<br>
-        Email: %(personal_data.email)s<br>
+        Email: %(personal_data.email)s</p>
 
-        Adres:<br>
+        <p>Adres:<br>
         Straat: %(billing_address.street)s<br>
         Postcode: %(billing_address.zip)s<br>
         Stad: %(billing_address.city)s<br>
