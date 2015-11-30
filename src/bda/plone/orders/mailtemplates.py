@@ -17,7 +17,7 @@ ORDER_TICKET_SUBJECT_NL = u"Teylers Museum E-tickets"
 
 ORDER_SUBJECT_EN = u'Order %s received.'
 
-ORDER_SUBJECT_NL = u'Bevestiging van je bestelling %s.'
+ORDER_SUBJECT_NL = u'Bevestiging van je bestelling %s'
 
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
@@ -144,10 +144,10 @@ ORDER_BODY_NL = """
         <p>Hartelijk bedankt voor je bestelling %(ordernumber)s bij Teylers Museum.<br>
         Je bestelling wordt standaard met TPG Post binnen 3-5 werkdagen verstuurd. </p>
 
-        <p>Je hebt betaaldmet: %(payment_method)s<br>
+        <p>Je hebt betaaldmet: %(payment_selection)s<br>
 
         <p>Uw bestelling wordt verzonden naar het onderstaande adres:</p>
-        <p>Persoonsgegevens:</p>
+        <br>Persoonsgegevens:
         Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
         Telefoonnummer:  %(personal_data.phone)s<br>
         Email: %(personal_data.email)s<p>
@@ -157,7 +157,7 @@ ORDER_BODY_NL = """
         Postcode: %(billing_address.zip)s<br>
         Stad: %(billing_address.city)s<br>
         Land: %(country_fixed)s<br>
-        %(delivery_address)s<br></p>
+        %(delivery_address)s</p>
 
         <p>Hieronder vindt u een overzicht van uw bestelling:<br>
         Opmerkingen:<br>
@@ -165,10 +165,10 @@ ORDER_BODY_NL = """
 
         <p>Bestelde producten:<br>
         %(item_listing)s</p>
-        <p>%(order_summery)s%(global_text)s%(payment_text)s</p>
+        %(order_summery)s%(global_text)s%(payment_text)s</p>
 
         <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
-        Kijk op onze website voor<a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/algemene-voorwaarden/'>meer informatie</a> of naar:<br>
+        Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of naar:<br>
         webshop@teylersmuseum.nl</p>
 </body>
 </html>
