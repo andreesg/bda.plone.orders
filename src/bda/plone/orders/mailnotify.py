@@ -164,16 +164,12 @@ class MailNotify(object):
             text.attach(MIMEText(message, 'html', 'utf-8'))
             msg.attach(text)
 
-            s = smtplib.SMTP('127.0.0.1')
-            s.sendmail(mailfrom, receiver, msg.as_string())
-            s.quit()
-
-            """api.portal.send_email(
+            api.portal.send_email(
                 recipient=receiver,
                 sender=mailfrom,
                 subject=subject,
-                body=message
-            )"""
+                body=msg.as_string()
+            )
 
 
 
