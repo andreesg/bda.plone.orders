@@ -151,7 +151,7 @@ class MailNotify(object):
                 self.send_failed(self.order_data.order)
                 pass
 
-            s = smtplib.SMTP('localhost')
+            s = smtplib.SMTP('127.0.0.1')
             s.sendmail(mailfrom, receiver, msg.as_string())
             s.quit()
         else:
@@ -164,7 +164,7 @@ class MailNotify(object):
             text.attach(MIMEText(message, 'html', 'utf-8'))
             msg.attach(text)
 
-            s = smtplib.SMTP('localhost')
+            s = smtplib.SMTP('127.0.0.1')
             s.sendmail(mailfrom, receiver, msg.as_string())
             s.quit()
 
