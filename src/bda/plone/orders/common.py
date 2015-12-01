@@ -291,9 +291,9 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             if order.attrs['email_sent'] == 'yes':
                 order.attrs['email_sent'] = 'yes'
             else:
-                order.attrs['email_sent'] = 'no'
+                order.attrs['email_sent'] = False
         except:
-            order.attrs['email_sent'] = 'no'
+            order.attrs['email_sent'] = False
 
 
         # order creator

@@ -140,7 +140,7 @@ class MailNotify(object):
             msg.attach(text)
 
             try:
-                link = self.download_link.replace("http://teylersmuseum-soft.intk.com/", "http://teylersmuseum-soft.intk.com:14082/NewTeylers/")
+                link = self.download_link.replace("http://www.teylersmuseum.nl/", "http://www.teylersmuseum.nl:9082/NewTeylers/")
                 data = self.download_file(link)
 
                 pdfAttachment = MIMEApplication(data, _subtype = "pdf")
