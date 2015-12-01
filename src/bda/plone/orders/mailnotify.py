@@ -38,6 +38,9 @@ from collective.sendaspdf.interfaces import ISendAsPDFOptionsMaker
 import urllib2
 import cookielib
 
+
+import transaction
+
 from bda.plone.checkout.vocabularies import get_pycountry_name
 
 logger = logging.getLogger('bda.plone.orders')
@@ -170,6 +173,7 @@ class MailNotify(object):
                 subject=subject,
                 body=msg.as_string()
             )
+            
 
 
 
