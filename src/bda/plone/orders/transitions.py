@@ -9,6 +9,7 @@ def transitions_of_main_state(state):
     transitions = list()
     if state in [interfaces.STATE_NEW, interfaces.STATE_RESERVED]:
         transitions = [
+            ifaces.STATE_TRANSITION_REDEEM,
             interfaces.STATE_TRANSITION_PROCESS,
             interfaces.STATE_TRANSITION_FINISH,
             interfaces.STATE_TRANSITION_CANCEL
@@ -22,6 +23,7 @@ def transitions_of_main_state(state):
         ]
     elif state == interfaces.STATE_PROCESSING:
         transitions = [
+            ifaces.STATE_TRANSITION_REDEEM,
             interfaces.STATE_TRANSITION_FINISH,
             interfaces.STATE_TRANSITION_CANCEL,
             interfaces.STATE_TRANSITION_RENEW
@@ -78,6 +80,14 @@ def do_transition_for_booking(booking, transition, order_data, event=False):
         booking.attrs['state'] = interfaces.STATE_CANCELLED
         # fix stock item available
         order_data.increase_stock([booking])
+
+    # TICKETS
+    elif transition == ifaces.STATE_TRANSITION_REDEEM:
+        del booking.attrs['state']
+        booking.attrs['state'] = ifaces.STATE_REDEEMED
+    else:
+        raise ValueError(u"invalid transition: %s" % transition)
+            
     else:
         raise ValueError(u"invalid transition: %s" % transition)
     bookings_soup = get_soup('bda_plone_orders_bookings', order_data.context)

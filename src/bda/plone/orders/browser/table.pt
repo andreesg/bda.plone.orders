@@ -9,6 +9,9 @@
     <tal:filter replace="structure view/render_filter"/>
   </div>
 
+  <div class="bdaorders_wrapper">
+
+  <div class="table-responsive">
   <table tal:define="ajaxurl view/ajaxurl;
                      columns view/columns"
          tal:attributes="data-ajaxurl ajaxurl;
@@ -35,4 +38,6 @@
       </tr>
     </tbody>
   </table>
+</div>
+</div>
 </html>

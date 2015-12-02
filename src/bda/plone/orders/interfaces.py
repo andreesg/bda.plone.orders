@@ -6,6 +6,7 @@ from zope.interface import Attribute
 from zope.interface import Interface
 
 
+STATE_REDEEMED = 'redeemed'
 STATE_CANCELLED = 'cancelled'
 STATE_FINISHED = 'finished'
 STATE_MIXED = 'mixed'
@@ -13,6 +14,7 @@ STATE_NEW = 'new'
 STATE_PROCESSING = 'processing'
 STATE_RESERVED = 'reserved'
 
+STATE_TRANSITION_REDEEM = 'redeem'
 STATE_TRANSITION_RENEW = 'renew'
 STATE_TRANSITION_PROCESS = 'process'
 STATE_TRANSITION_FINISH = 'finish'

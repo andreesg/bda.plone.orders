@@ -13,20 +13,47 @@ from zope.interface import implementer
 ###############################################################################
 
 ORDER_SUBJECT_EN = u'Order %s received.'
+ORDER_SUBJECT_NL = u'Bevestiging van je bestelling %s'
+ORDER_TICKET_SUBJECT_EN = u"Teylers Museum E-tickets"
+ORDER_TICKET_SUBJECT_NL = u"Teylers Museum E-tickets"
 
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
-ORDER_BODY_EN = """
+ORDER_TICKET_EN = """\
+<html>
+    <head></head>
+    <body>
+        <p>Thank you very much for your order. We look forward welcoming you. Please find your tickets attached in this e-mail.</p>
+
+        <p>For questions on your order you can contact info@teylersmuseum.nl.</p>
+
+        <p>The website of the Teylers Museum contains an immense amount of background and topical information. If you would like to prepare your visit in advance, have a look at <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> or join us on social media.</p>
+    </body>
+</html>
+"""
+
+ORDER_TICKET_NL = """\
+<html>
+    <head></head>
+    <body>
+        <p>Hartelijk bedankt voor uw bestelling. Uw tickets zijn bijgevoegd in de bijlage. Wij kijken zeer uit naar uw komst.</p>
+
+        <p>Heeft u vragen over uw bestelling, neem dan contact opnemen met info@teylersmuseum.nl.</p>
+
+        <p>De website van het Teylers Museum bevat veel achtergrond- en actuele informatie. Mocht u alvast uw bezoek willen voorbereiden gaat u dan naar <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
+    </body>
+</html>
+"""
+
+OORDER_BODY_EN = """
 Date: %(date)s
 
 Thank you for your order:
 
 Ordernumber: %(ordernumber)s
-Order details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
 Phone: %(personal_data.phone)s
 Email: %(personal_data.email)s
 
@@ -34,7 +61,7 @@ Address:
 Street: %(billing_address.street)s
 ZIP: %(billing_address.zip)s
 City: %(billing_address.city)s
-Country: %(billing_address.country)s
+Country: %(country_fixed)s
 %(delivery_address)s
 Comment:
 %(order_comment.comment)s
@@ -42,7 +69,47 @@ Comment:
 Ordered items:
 %(item_listing)s
 
-%(order_summary)s%(global_text)s%(payment_text)s
+%(order_summery)s%(global_text)s%(payment_text)s
+"""
+
+ORDER_BODY_NL = """
+<html>
+    <head></head>
+    <body>
+        <p>Beste %(personal_data.firstname)s,</p>
+
+        <p>Hartelijk bedankt voor je bestelling %(ordernumber)s bij Teylers Museum.<br>
+        Je bestelling wordt standaard met TPG Post binnen 3-5 werkdagen verstuurd. </p>
+
+        <p>Je hebt betaaldmet: %(payment_selection)s<br>
+
+        <p>Uw bestelling wordt verzonden naar het onderstaande adres:
+        <br>Persoonsgegevens:<br>
+        Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        Telefoonnummer:  %(personal_data.phone)s<br>
+        Email: %(personal_data.email)s</p>
+
+        <p>Adres:<br>
+        Straat: %(billing_address.street)s<br>
+        Postcode: %(billing_address.zip)s<br>
+        Stad: %(billing_address.city)s<br>
+        Land: %(country_fixed)s<br>
+        %(delivery_address)s</p>
+
+        <p>Hieronder vindt u een overzicht van uw bestelling:<br>
+        Opmerkingen:<br>
+        %(order_comment.comment)s</p>
+
+        <p>Bestelde producten:<br>
+        %(item_listing)s
+        %(order_summery)s%(global_text)s%(payment_text)s</p>
+
+        <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
+        Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of naar:<br>
+        webshop@teylersmuseum.nl</p>
+</body>
+</html>
+
 """
 
 RESERVATION_BODY_EN = """
@@ -456,9 +523,17 @@ Order details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 ###############################################################################
 
 ORDER_TEMPLATES = {
+    'nl': {
+        'ticket_subject': ORDER_TICKET_SUBJECT_NL,
+        'subject': ORDER_SUBJECT_NL,
+        'body': ORDER_BODY_NL,
+        'ticket': ORDER_TICKET_NL,
+        'delivery_address': DELIVERY_ADDRESS_EN},
     'en': {
+        'ticket_subject': ORDER_TICKET_SUBJECT_EN,
         'subject': ORDER_SUBJECT_EN,
         'body': ORDER_BODY_EN,
+        'ticket': ORDER_TICKET_EN,
         'delivery_address': DELIVERY_ADDRESS_EN},
     'de': {
         'subject': ORDER_SUBJECT_DE,

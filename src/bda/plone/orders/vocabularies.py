@@ -14,6 +14,7 @@ import plone.api
 def state_vocab():
     vocab = {
         ifaces.STATE_NEW: _('new', default=u'New'),
+        ifaces.STATE_REDEEMED: _('redeemed', default=u'Redeemed'),
         ifaces.STATE_PROCESSING: _('processing', default=u'Processing'),
         ifaces.STATE_FINISHED: _('finished', default=u'Finished'),
         ifaces.STATE_CANCELLED: _('cancelled', default=u'Cancelled'),
@@ -25,6 +26,7 @@ def state_vocab():
 
 def state_transitions_vocab():
     vocab = {
+        ifaces.STATE_TRANSITION_REDEEM: _('redeem', default=u'Redeem'),
         ifaces.STATE_TRANSITION_RENEW: _('renew', default=u'Renew'),
         ifaces.STATE_TRANSITION_PROCESS: _('process', default=u'Process'),
         ifaces.STATE_TRANSITION_FINISH: _('finish', default=u'Finish'),

@@ -201,10 +201,26 @@ class BookingsCatalogFactory(object):
         catalog[u'state'] = CatalogFieldIndex(state_indexer)
         salaried_indexer = NodeAttributeIndexer('salaried')
         catalog[u'salaried'] = CatalogFieldIndex(salaried_indexer)
-        search_attributes = ['email',
-                             'title']
+        
+        firstname_indexer = NodeAttributeIndexer('personal_data.firstname')
+        catalog[u'personal_data.firstname'] = \
+            CatalogFieldIndex(firstname_indexer)
+        lastname_indexer = NodeAttributeIndexer('personal_data.lastname')
+        catalog[u'personal_data.lastname'] = \
+            CatalogFieldIndex(lastname_indexer)
+
+        # Tickets redeem
+        redeemed_indexer = NodeAttributeIndexer('redeemed')
+        catalog[u'redeemed'] = CatalogFieldIndex(redeemed_indexer)
+
+        to_redeem_indexer = NodeAttributeIndexer('to_redeem')
+        catalog[u'to_redeem'] = CatalogFieldIndex(to_redeem_indexer)
+
+        search_attributes = ['uid', 'redeemed', 'title', 'to_redeem', 'personal_data.firstname', 'personal_data.lastname']
+
         text_indexer = NodeTextIndexer(search_attributes)
         catalog[u'text'] = CatalogTextIndex(text_indexer)
+
         return catalog
 
 
@@ -236,12 +252,16 @@ class OrdersCatalogFactory(object):
         catalog[u'personal_data.lastname'] = \
             CatalogFieldIndex(lastname_indexer)
         city_indexer = NodeAttributeIndexer('billing_address.city')
+        
         catalog[u'billing_address.city'] = CatalogFieldIndex(city_indexer)
         search_attributes = ['personal_data.lastname',
                              'personal_data.firstname',
-                             'personal_data.email',
                              'billing_address.city',
                              'ordernumber']
+        
+        email_indexer = NodeAttributeIndexer('email_sent')
+        catalog[u'email_sent'] = CatalogFieldIndex(email_indexer)
+
         text_indexer = NodeTextIndexer(search_attributes)
         catalog[u'text'] = CatalogTextIndex(text_indexer)
         return catalog
@@ -271,6 +291,15 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         order = self.order
         # order UUID
         uid = order.attrs['uid'] = uuid.uuid4()
+
+        try:
+            if order.attrs['email_sent'] == 'yes':
+                order.attrs['email_sent'] = 'yes'
+            else:
+                order.attrs['email_sent'] = False
+        except:
+            order.attrs['email_sent'] = False
+
         # order creator
         creator = None
         member = plone.api.user.get_current()
@@ -407,6 +436,14 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         booking.attrs['remaining_stock_available'] = available
         booking.attrs['state'] = state
         booking.attrs['salaried'] = ifaces.SALARIED_NO
+
+        booking.attrs['redeemed'] = []
+        to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), (i+1)) for i in range(count)]
+        booking.attrs['to_redeem'] = to_redeem
+        
+        booking.attrs['personal_data.firstname'] = order.attrs['personal_data.firstname']
+        booking.attrs['personal_data.lastname'] = order.attrs['personal_data.lastname']
+
         booking.attrs['tid'] = 'none'
         shipping_info = queryAdapter(buyable, IShippingItem)
         if shipping_info:
@@ -825,3 +862,4 @@ def booking_update_comment(context, booking_uid, comment):
     booking = booking_data.booking
     booking.attrs['comment'] = comment
     booking_data.reindex()
+    

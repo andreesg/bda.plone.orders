@@ -243,7 +243,7 @@ class TableData(BrowserView):
         colnames = [_['id'] for _ in columns]
         # todo json response header einbaun
 
-        def record2list(record):
+        def record2list(record, title=None, uid=None):
             result = list()
             for colname in colnames:
                 coldef = self.column_def(colname)
@@ -689,6 +689,7 @@ class OrderViewBase(BrowserView):
             obj = get_object_by_uid(self.context, booking.attrs['buyable_uid'])
             state = vocabs.state_vocab()[booking.attrs.get('state')]
             salaried = vocabs.salaried_vocab()[booking.attrs.get('salaried')]
+            
             ret.append({
                 'uid': booking.attrs['uid'],
                 'title': booking.attrs['title'],
@@ -702,6 +703,8 @@ class OrderViewBase(BrowserView):
                 'currency': booking.attrs.get('currency'),
                 'state': state,
                 'salaried': salaried,
+                'redeemed': booking.attrs.get('redeemed', ''),
+                'to_redeem': booking.attrs.get('to_redeem', '')
             })
         return ret
 
