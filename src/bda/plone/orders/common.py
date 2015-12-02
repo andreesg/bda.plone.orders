@@ -313,9 +313,22 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # payment related information
         if cart_data.total > Decimal(0):
             payment_param = 'checkout.payment_selection.payment'
+            
+            payment_selection = 'checkout.payment_method_selection.payment_method'
+            p_selection = data.fetch(payment_selection).extracted
+
             pid = data.fetch(payment_param).extracted
             payment = Payments(self.context).get(pid)
             order.attrs['payment_method'] = pid
+
+            if p_selection:
+                if p_selection == 'ideal':
+                    order.attrs['payment_selection'] = 'iDeal'
+                else:
+                    order.attrs['payment_selection'] = p_selection
+            else:
+                order.attrs['payment_selection'] = 'no_payment'
+
             if payment:
                 order.attrs['payment_label'] = payment.label
             else:
