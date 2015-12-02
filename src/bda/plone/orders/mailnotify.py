@@ -25,6 +25,7 @@ from zope.component.hooks import getSite
 from zope.globalrequest import getRequest
 from zope.i18n import translate
 from decimal import Decimal
+from bda.plone.checkout.vocabularies import get_pycountry_name
 
 import requests
 import logging
