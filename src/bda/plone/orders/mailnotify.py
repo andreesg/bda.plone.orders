@@ -456,6 +456,8 @@ def create_mail_body(templates, context, order_data, download_link=None):
                            target_language=lang)
     arguments['salutation'] = safe_encode(salutation)
 
+    total_price = order_data.total
+
     # todo: next should be a cb
     try:
         if attrs['delivery_address.alternative_delivery']:
@@ -584,9 +586,15 @@ def notify_order_success(event, who=None):
     templates['global_text_cb'] = create_global_text
     templates['payment_text_cb'] = create_payment_text
     if who == "customer":
-        do_notify_customer(event.context, order_data, templates)
+        download_link = None
+        if hasattr(event, "download_link"):
+            download_link = event.download_link
+        do_notify_customer(event.context, order_data, templates, download_link)
     else:
-        do_notify_shopmanager(event.context, order_data, templates)
+        download_link = None
+        if hasattr(event, "download_link"):
+            download_link = event.download_link
+        do_notify_shopmanager(event.context, order_data, templates, download_link)
 
 
 class BookingCancelledTitleCB(object):
