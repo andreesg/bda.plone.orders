@@ -69,7 +69,7 @@ Comment:
 Ordered items:
 %(item_listing)s
 
-%(order_summery)s%(global_text)s%(payment_text)s
+%(order_summary)s%(global_text)s%(payment_text)s
 """
 
 ORDER_BODY_NL = """
@@ -102,7 +102,7 @@ ORDER_BODY_NL = """
 
         <p>Bestelde producten:<br>
         %(item_listing)s
-        %(order_summery)s%(global_text)s%(payment_text)s</p>
+        %(order_summary)s%(global_text)s%(payment_text)s</p>
 
         <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
         Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of naar:<br>
