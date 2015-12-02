@@ -45,7 +45,7 @@ ORDER_TICKET_NL = """\
 </html>
 """
 
-OORDER_BODY_EN = """
+ORDER_BODY_EN = """
 Date: %(date)s
 
 Thank you for your order:

@@ -87,8 +87,6 @@ def do_transition_for_booking(booking, transition, order_data, event=False):
         booking.attrs['state'] = ifaces.STATE_REDEEMED
     else:
         raise ValueError(u"invalid transition: %s" % transition)
-            
-    else:
-        raise ValueError(u"invalid transition: %s" % transition)
+
     bookings_soup = get_soup('bda_plone_orders_bookings', order_data.context)
     bookings_soup.reindex(records=[booking])
