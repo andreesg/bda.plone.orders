@@ -496,6 +496,13 @@ def create_mail_body(templates, context, order_data, download_link=None):
     arguments["name_salutation"] = name_salutation
     arguments["total_price"] = ascur(total_price)
 
+    try:
+        if arguments["payment_selection"]:
+            arguments["payment_selection"] = arguments["payment_selection"]
+    except:
+        arguments["payment_selection"] = ""
+        pass
+
     if download_link != None and download_link != "" and tickets:
         if download_link == "done":
             base_url = context.portal_url()
@@ -533,7 +540,7 @@ def do_notify(context, order_data, templates, receiver, download_link=None):
     subject = templates['subject'] % attrs['ordernumber']
 
     message, download_link_pdf = create_mail_body(templates, context, order_data, download_link)
-    
+
     mail_notify = MailNotify(context, download_link_pdf, order_data)
     try:
         mail_notify.send(subject, message, receiver)
