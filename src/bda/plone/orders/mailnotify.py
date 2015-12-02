@@ -117,8 +117,6 @@ class MailNotify(object):
             body=message
         )
 
-
-
     def send(self, subject, message, receiver):
         shop_manager_address = self.settings.admin_email
         if not shop_manager_address:
@@ -533,8 +531,10 @@ def do_notify(context, order_data, templates, receiver, download_link=None):
         subject = templates['subject'] % attrs['ordernumber']
 
     subject = templates['subject'] % attrs['ordernumber']
-    message = create_mail_body(templates, context, order_data, download_link)
-    mail_notify = MailNotify(context)
+
+    message, download_link_pdf = create_mail_body(templates, context, order_data, download_link)
+    
+    mail_notify = MailNotify(context, download_link_pdf, order_data)
     try:
         mail_notify.send(subject, message, receiver)
     except Exception:
