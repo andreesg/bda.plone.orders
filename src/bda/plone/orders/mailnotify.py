@@ -204,7 +204,7 @@ def create_mail_listing(context, order_data):
             title = '%s (%s)' % (title, comment)
         # fetch currency
         currency = booking.attrs['currency']
-        currency = u"€"
+        currency = "€"
         # fetch net
         net = booking.attrs['net']
         original_price = (Decimal(net)) * 1
