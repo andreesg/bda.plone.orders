@@ -81,7 +81,7 @@ ORDER_BODY_NL = """
         <p>Hartelijk bedankt voor je bestelling %(ordernumber)s bij Teylers Museum.<br>
         Je bestelling wordt standaard met TPG Post binnen 3-5 werkdagen verstuurd. </p>
 
-        <p>Je hebt betaaldmet: %(payment_selection)s<br>
+        <p>Je hebt betaald met: %(payment_selection)s<br>
 
         <p>Uw bestelling wordt verzonden naar het onderstaande adres:
         <br>Persoonsgegevens:<br>
@@ -105,7 +105,7 @@ ORDER_BODY_NL = """
         %(order_summary)s%(global_text)s%(payment_text)s</p>
 
         <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
-        Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of naar:<br>
+        Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of mail naar:<br>
         webshop@teylersmuseum.nl</p>
 </body>
 </html>
