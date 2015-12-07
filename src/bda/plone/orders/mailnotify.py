@@ -166,12 +166,19 @@ class MailNotify(object):
             text.attach(MIMEText(message, 'html', 'utf-8'))
             msg.attach(text)
 
+            try:
+                self.order_data.order.attrs['email_sent'] = 'yes'
+            except:
+                pass
+                
             api.portal.send_email(
                 recipient=receiver,
                 sender=mailfrom,
                 subject=subject,
                 body=msg.as_string()
             )
+
+
 
 
 def _indent(text, ind=5, width=80):

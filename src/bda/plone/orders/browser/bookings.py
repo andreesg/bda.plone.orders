@@ -164,6 +164,7 @@ class BookingsTable(BrowserView):
         # this actually gets the title of a buyable_uid
         title = record.attrs.get('title', '')
         title = title.encode('ascii', 'ignore')
+        
         bookings_quantity = self.render_bookings_quantity(colname, record)
         bookings_total_sum = self.render_bookings_total_sum(colname, record)
         value = \
