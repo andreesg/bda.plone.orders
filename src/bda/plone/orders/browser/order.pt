@@ -5,6 +5,10 @@
      i18n:domain="bda.plone.orders"
      tal:define="order view/order">
 
+  <div id="portal-logo" class="brand print-logo" title="Teylers Museum" accesskey="1">
+    <img src="++resource++plonetheme.museumbase.css/teylers_black.png" alt="Teylers Museum" title="Teylers Museum" height="519" width="2301">
+  </div>
+  
   <h1 i18n:translate="order_details">Order Details</h1>
 
   <div class="qr_code"
