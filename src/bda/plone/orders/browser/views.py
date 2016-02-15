@@ -462,7 +462,18 @@ class OrdersTable(OrdersTableBase):
             'class_': 'select_order',
         }
         select_order = tag('input', **select_order_attrs)
-        return select_order + view_order
+
+        ## Custom print order 
+        print_order_attrs = {
+            "class_": "contenttype-document",
+            "href": "%s/showorder?ordernumber=%s&email=%s" %(self.context.absolute_url(), record.attrs['ordernumber'], record.attrs['personal_data.email']),
+            "target": "_blank",
+            "title": _('view_order', default=u'View Order'),
+        }
+
+        print_order = tag('a', '&nbsp', **print_order_attrs)
+
+        return select_order + print_order
 
     def check_modify_order(self, order):
         vendor_uid = self.request.form.get('vendor', '')
