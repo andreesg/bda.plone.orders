@@ -90,10 +90,9 @@ ORDER_BODY_NL = """
         Email: %(personal_data.email)s</p>
 
         <p>Adres:<br>
-        Straat: %(billing_address.street)s<br>
-        Postcode: %(billing_address.zip)s<br>
-        Stad: %(billing_address.city)s<br>
-        Land: %(country_fixed)s<br>
+        %(billing_address.street)s<br>
+        %(billing_address.city)s %(billing_address.zip)s<br>
+        %(country_fixed)s<br>
         %(delivery_address)s</p>
 
         <p>Hieronder vindt u een overzicht van uw bestelling:<br>

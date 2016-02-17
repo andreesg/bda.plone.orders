@@ -222,6 +222,9 @@ def create_mail_listing(context, order_data):
         # XXX: discount
         state = booking.attrs.get('state')
         state_text = ''
+
+        item_number = booking.attrs.get('item_number')
+
         if state == ifaces.STATE_RESERVED:
             state_text = ' ({})'.format(vocabs.state_vocab()[state])
         
@@ -234,14 +237,24 @@ def create_mail_listing(context, order_data):
                 price=price,
             )
         else:
-            line = '{count: 4f} x {title}    {price}'.format(
-                count=booking.attrs['buyable_count'],
-                title=title,
-                state=state_text,
-                price=price,
-            )
+            if item_number:
+                line = '{count: 4f} x {title}    {price}'.format(
+                    count=booking.attrs['buyable_count'],
+                    title=title,
+                    state=state_text,
+                    price=price,
+                )
+            else:
+                line = '{count: 4f} x {title}    {price}<br>Artikelnummer: {item_number}'.format(
+                    count=booking.attrs['buyable_count'],
+                    title=title,
+                    state=state_text,
+                    price=price,
+                    item_number=item_number
+                )
 
         lines.append(line)
+
         if comment:
             lines.append(_indent('({0})'.format(comment)))
         notificationtext = IItemNotificationText(buyable)
