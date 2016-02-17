@@ -466,10 +466,15 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         trading_info = queryAdapter(ifaces.ITrading, buyable)
         if trading_info:
             booking.attrs['item_number'] = trading_info.item_number
+
             booking.attrs['gtin'] = trading_info.gtin
         else:
             booking.attrs['item_number'] = None
             booking.attrs['gtin'] = None
+
+        if not booking.attrs['item_number']
+            booking.attrs['item_number'] = getattr(buyable, 'item_number', None)
+            
         return booking
 
 

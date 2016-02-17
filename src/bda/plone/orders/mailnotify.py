@@ -238,19 +238,19 @@ def create_mail_listing(context, order_data):
             )
         else:
             if item_number:
-                line = '{count: 4f} x {title}    {price}'.format(
-                    count=booking.attrs['buyable_count'],
-                    title=title,
-                    state=state_text,
-                    price=price,
-                )
-            else:
                 line = '{count: 4f} x {title}    {price}<br>Artikelnummer: {item_number}'.format(
                     count=booking.attrs['buyable_count'],
                     title=title,
                     state=state_text,
                     price=price,
                     item_number=item_number
+                )
+            else:
+                line = '{count: 4f} x {title}    {price}'.format(
+                    count=booking.attrs['buyable_count'],
+                    title=title,
+                    state=state_text,
+                    price=price,
                 )
 
         lines.append(line)
