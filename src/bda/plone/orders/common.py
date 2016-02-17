@@ -350,9 +350,20 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['shipping_description'] = shipping.description
 
             try:
-                ## NEEDS CHANGE
-                shipping_net = shipping.net(self.items)
-                shipping_vat = shipping.vat(self.items)
+                country_param = "checkout.personal_data.woonplaats"
+                country_code = data.fetch(country_param).extracted
+                billing_type = ""
+                if country_code == "528":
+                    billing_type = ""
+                elif country_code in EU_COUNTRIES:
+                    billing_type = "eu"
+                else:
+                    billing_type = "non-eu"
+
+                print billing_type
+
+                shipping_net = shipping.net(self.items, billing_type)
+                shipping_vat = shipping.vat(self.items, billing_type)
                 order.attrs['shipping_net'] = shipping_net
                 order.attrs['shipping_vat'] = shipping_vat
                 order.attrs['shipping'] = shipping_net + shipping_vat

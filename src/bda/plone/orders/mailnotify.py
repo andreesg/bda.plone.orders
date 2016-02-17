@@ -342,7 +342,7 @@ def create_order_summary(context, order_data):
         lines.append(translate(order_summary_shipping_label, context=request))
         # shiping description
         shipping_description = attrs['shipping_description']
-        lines.append(translate(shipping_description, context=request))
+        #lines.append(translate(shipping_description, context=request))
         # shiping net
         order_summary_shipping_net = _(
             'order_summary_shipping_net',
@@ -351,7 +351,7 @@ def create_order_summary(context, order_data):
                 'value': ascur(shipping_net),
                 'currency': currency,
             })
-        lines.append(translate(order_summary_shipping_net, context=request))
+        #lines.append(translate(order_summary_shipping_net, context=request))
         # shiping vat
         shipping_vat = order_data.shipping_vat
         order_summary_shipping_vat = _(
@@ -361,7 +361,7 @@ def create_order_summary(context, order_data):
                 'value': ascur(shipping_vat),
                 'currency': currency,
             })
-        lines.append(translate(order_summary_shipping_vat, context=request))
+        #lines.append(translate(order_summary_shipping_vat, context=request))
         # shiping total
         shipping_total = shipping_net + shipping_vat
         order_summary_shipping_total = _(
