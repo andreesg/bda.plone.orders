@@ -472,9 +472,9 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             booking.attrs['item_number'] = None
             booking.attrs['gtin'] = None
 
-        if not booking.attrs['item_number']
+        if not booking.attrs['item_number']:
             booking.attrs['item_number'] = getattr(buyable, 'item_number', None)
-            
+
         return booking
 
 
