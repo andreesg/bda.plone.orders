@@ -55,6 +55,8 @@ logger = logging.getLogger('bda.plone.checkout')
 
 DT_FORMAT = '%d.%m.%Y %H:%M'
 
+EU_COUNTRIES = ['040', '056', '100', '191', '203', '208', '233', '246', '250', '276', '300', '348', '372', '380', '428', '440', '442', '470', '620', '642', '703', '705', '724', '752', '826']
+
 
 def create_ordernumber():
     onum = hash(time.time())
@@ -346,12 +348,15 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['shipping_method'] = sid
             order.attrs['shipping_label'] = shipping.label
             order.attrs['shipping_description'] = shipping.description
+
             try:
+                ## NEEDS CHANGE
                 shipping_net = shipping.net(self.items)
                 shipping_vat = shipping.vat(self.items)
                 order.attrs['shipping_net'] = shipping_net
                 order.attrs['shipping_vat'] = shipping_vat
                 order.attrs['shipping'] = shipping_net + shipping_vat
+
             # B/C for bda.plone.shipping < 0.4
             except NotImplementedError:
                 shipping_net = shipping.calculate(self.items)
