@@ -791,16 +791,28 @@ class PaymentData(object):
 
     @property
     def description(self):
+
+        is_ticket_system = "/tickets" in self.context.absolute_url()
+        
         order = self.order_data.order
         attrs = order.attrs
         amount = '%s %s' % (self.currency,
                             str(round(self.order_data.total, 2)))
-        description = ', '.join([
-            attrs['created'].strftime(DT_FORMAT),
-            attrs['personal_data.firstname'],
-            attrs['personal_data.lastname'],
-            attrs['billing_address.city'],
-            safe_encode(amount)])
+
+        if is_ticket_system:
+            description = ', '.join([
+                attrs['created'].strftime(DT_FORMAT),
+                attrs['personal_data.firstname'],
+                attrs['personal_data.lastname'],
+                safe_encode(amount)])
+        else:
+            description = ', '.join([
+                attrs['created'].strftime(DT_FORMAT),
+                attrs['personal_data.firstname'],
+                attrs['personal_data.lastname'],
+                attrs['billing_address.city'],
+                safe_encode(amount)])
+
         return description
 
     @property

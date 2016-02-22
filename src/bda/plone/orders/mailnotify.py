@@ -618,6 +618,7 @@ def notify_order_success(event, who=None):
     templates['order_summary_cb'] = create_order_summary
     templates['global_text_cb'] = create_global_text
     templates['payment_text_cb'] = create_payment_text
+    
     if who == "customer":
         download_link = None
         if hasattr(event, "download_link"):
