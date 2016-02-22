@@ -81,10 +81,12 @@ CONTACT_ATTRIBUTES = [
 def extract_contact(order):
     """Extract export contact from order by ``CONTACT_ATTRIBUTE_MAP`` keys.
     """
+
+    ## NEEDS FIX
     contact = dict()
     for attr in CONTACT_ATTRIBUTES:
         value = order.attrs.get(attr, u'').strip()
-        _value = value.encode('ascii', 'ignore')
+        _value = value.decode('ascii', 'ignore')
         contact[attr] = _value
     return contact
 
