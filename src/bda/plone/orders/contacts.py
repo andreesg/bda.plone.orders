@@ -83,7 +83,9 @@ def extract_contact(order):
     """
     contact = dict()
     for attr in CONTACT_ATTRIBUTES:
-        contact[attr] = order.attrs.get(attr, u'').strip()
+        value = order.attrs.get(attr, u'').strip()
+        _value = value..encode('ascii', 'ignore')
+        contact[attr] = _value
     return contact
 
 # maximum attempts for creating a new contact id before failure
