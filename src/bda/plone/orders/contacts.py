@@ -84,7 +84,7 @@ def extract_contact(order):
     contact = dict()
     for attr in CONTACT_ATTRIBUTES:
         value = order.attrs.get(attr, u'').strip()
-        _value = value..encode('ascii', 'ignore')
+        _value = value.encode('ascii', 'ignore')
         contact[attr] = _value
     return contact
 
