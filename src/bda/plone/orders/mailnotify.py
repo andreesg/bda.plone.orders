@@ -142,7 +142,7 @@ class MailNotify(object):
             msg.attach(text)
 
             try:
-                link = self.download_link.replace("http://www.teylersmuseum.nl/", "http://www.teylersmuseum.nl:9082/NewTeylers/")
+                link = self.download_link.replace("http://dev.intk.com:9082/NewTeylers/", "http://dev.intk.com:9083/NewTeylers/")
                 data = self.download_file(link)
 
                 pdfAttachment = MIMEApplication(data, _subtype = "pdf")
@@ -466,6 +466,8 @@ def create_mail_body(templates, context, order_data, download_link=None):
     order_data
         Order-data instance.
     """
+    tickets = '/tickets' in context.absolute_url()
+
     lang = context.restrictedTraverse('@@plone_portal_state').language()
     attrs = order_data.order.attrs
     arguments = dict(attrs.items())
@@ -502,16 +504,18 @@ def create_mail_body(templates, context, order_data, download_link=None):
         top_salutation = "heer/mevrouw"
         name_salutation = "Dhr./Mevr."
 
-    original_country = arguments['billing_address.country']
-    try:
-        country_name = get_pycountry_name(original_country)
-    except:
-        country_name = original_country
 
-    arguments["country_fixed"] = country_name.encode('ascii', 'ignore')
-    ## TODO
-    if arguments["country_fixed"] == "Netherlands":
-        arguments["country_fixed"] = "Nederland"
+    if not tickets:
+        original_country = arguments['billing_address.country']
+        try:
+            country_name = get_pycountry_name(original_country)
+        except:
+            country_name = original_country
+
+        arguments["country_fixed"] = country_name.encode('ascii', 'ignore')
+        ## TODO
+        if arguments["country_fixed"] == "Netherlands":
+            arguments["country_fixed"] = "Nederland"
 
     arguments["top_salutation"] = top_salutation
     arguments["name_salutation"] = name_salutation
@@ -524,7 +528,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
         arguments["payment_selection"] = ""
         pass
 
-    if download_link != None and download_link != "" and tickets:
+    if tickets or (download_link != None and download_link != ""):
         if download_link == "done":
             base_url = context.portal_url()
             language = context.language

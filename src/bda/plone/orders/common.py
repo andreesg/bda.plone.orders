@@ -294,6 +294,8 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # order UUID
         uid = order.attrs['uid'] = uuid.uuid4()
 
+        is_ticket_system = "/tickets" in self.context.absolute_url()
+
         try:
             if order.attrs['email_sent'] == 'yes':
                 order.attrs['email_sent'] = 'yes'
@@ -340,8 +342,19 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['payment_method'] = 'no_payment'
             order.attrs['payment_label'] = _('no_payment',
                                              default=u'No Payment')
+
+        ## CUSTOM TICKETS
+        if is_ticket_system:
+            order.attrs['shipping_method'] = 'no_shipping'
+            order.attrs['shipping_label'] = _('no_shipping',
+                                              default=u'No Shipping')
+            order.attrs['shipping_description'] = ''
+            order.attrs['shipping_net'] = Decimal(0)
+            order.attrs['shipping_vat'] = Decimal(0)
+            order.attrs['shipping'] = Decimal(0)
+
         # shipping related information
-        if cart_data.include_shipping_costs:
+        elif cart_data.include_shipping_costs:
             shipping_param = 'checkout.shipping_selection.shipping'
             sid = data.fetch(shipping_param).extracted
             shipping = Shippings(self.context).get(sid)
