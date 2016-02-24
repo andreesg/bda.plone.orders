@@ -463,10 +463,13 @@ class OrdersTable(OrdersTableBase):
         }
         select_order = tag('input', **select_order_attrs)
 
+        site = plone.api.portal.get()
+        portal_url = site.absolute_url()
+        
         ## Custom print order 
         print_order_attrs = {
             "class_": "contenttype-document",
-            "href": "%s/showorder?ordernumber=%s&email=%s" %(self.context.absolute_url(), record.attrs['ordernumber'], record.attrs['personal_data.email']),
+            "href": "%s/showorder?ordernumber=%s&email=%s" %(portal_url, record.attrs['ordernumber'], record.attrs['personal_data.email']),
             "target": "_blank",
             "title": _('view_order', default=u'View Order'),
         }
