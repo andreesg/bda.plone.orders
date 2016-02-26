@@ -47,6 +47,7 @@ import plone.api
 import urllib
 import uuid
 
+# Custom for tickets
 
 class Translate(object):
 
@@ -236,11 +237,14 @@ class TableData(BrowserView):
                 return column
 
     def __call__(self):
+
         soup = get_soup(self.soup_name, self.context)
         aaData = list()
         length, lazydata = self.query(soup)
+
         columns = self.columns
         colnames = [_['id'] for _ in columns]
+
         # todo json response header einbaun
 
         def record2list(record, title=None, uid=None):
@@ -254,14 +258,17 @@ class TableData(BrowserView):
                     value = record.attrs.get(colname, '')
                 result.append(value)
             return result
+
         for lazyrecord in self.slice(lazydata):
             aaData.append(record2list(lazyrecord()))
+
         data = {
             "sEcho": int(self.request.form['sEcho']),
             "iTotalRecords": soup.storage.length.value,
             "iTotalDisplayRecords": length,
             "aaData": aaData,
         }
+
         self.request.response.setHeader("Content-type", "application/json")
         return json.dumps(data)
 
@@ -272,14 +279,23 @@ class OrdersViewBase(BrowserView):
     def orders_table(self):
         return self.context.restrictedTraverse(self.table_view_name)()
 
+    def redeem_table(self):
+        return self.context.restrictedTraverse(self.table_view_name)()
+
 
 class OrdersView(OrdersViewBase):
-
+    
     def __call__(self):
         # check if authenticated user is vendor
         if not get_vendors_for():
             raise Unauthorized
-        return super(OrdersView, self).__call__()
+
+        if '/tickets' in self.context.absolute_url():
+            self.table_view_name = '@@redeemtable'
+            return super(OrdersView, self).__call__()
+        else:
+            self.table_view_name = '@@orderstable'
+            return super(OrdersView, self).__call__()
 
 
 class MyOrdersView(OrdersViewBase):
@@ -414,6 +430,7 @@ class OrdersTable(OrdersTableBase):
         return filter
 
     def render_order_actions_head(self):
+
         tag = Tag(Translate(self.request))
         select_all_orders_attrs = {
             'name': 'select_all_orders',
@@ -465,7 +482,7 @@ class OrdersTable(OrdersTableBase):
 
         site = plone.api.portal.get()
         portal_url = site.absolute_url()
-        
+
         ## Custom print order 
         print_order_attrs = {
             "class_": "contenttype-document",
@@ -594,12 +611,14 @@ class OrdersData(OrdersTable, TableData):
         if not IPloneSiteRoot.providedBy(self.context):
             buyable_uids = self._get_buyables_in_context()
             query = query & Any('buyable_uids', buyable_uids)
+            
         # query orders and return result
         sort = self.sort()
         res = soup.lazy(query,
                         sort_index=sort['index'],
                         reverse=sort['reverse'],
                         with_size=True)
+        
         length = res.next()
         return length, res
 

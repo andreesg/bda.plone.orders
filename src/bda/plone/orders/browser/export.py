@@ -253,6 +253,10 @@ class ExportOrdersForm(YAMLForm):
         return ret
 
 
+class ExportOrdersContext(ExportOrdersForm):
+    pass
+
+
 class ExportOrdersContextual(BrowserView):
 
     def __call__(self):

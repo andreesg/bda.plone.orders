@@ -193,10 +193,18 @@
     permission="bda.plone.orders.ExportOrders"
     layer="..interfaces.IOrdersExtensionLayer"/>
 
+  <!-- custom export -->
+  <browser:page
+    for="*"
+    name="exportorders_context"
+    class=".export.ExportOrdersForm"
+    permission="bda.plone.orders.ExportOrders"
+    layer="..interfaces.IOrdersExtensionLayer"/>
+    
   <browser:page
     for="*"
     name="exportorders_contextual"
-    class=".export.ExportOrdersContextual"
+    class=".export.ExportOrdersContext"
     permission="bda.plone.orders.ExportOrders"
     layer="..interfaces.IOrdersExtensionLayer"/>
 

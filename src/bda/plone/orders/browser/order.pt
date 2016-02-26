@@ -40,8 +40,8 @@
       <span tal:replace="order/personal_data.phone">phone</span>
     </div>
 
-  <tal:verify_tickets tal:condition="python: '/tickets' not in context.absolute_url()">
-  <div class="billing_address">
+  
+  <div class="billing_address" tal:on-error="nothing">
       <h3 i18n:translate="billing_address">Billing Address:</h3>
       <strong i18n:translate="order_street">Street:</strong>
       <span tal:replace="order/billing_address.street">street</span>
@@ -56,7 +56,6 @@
       </span>
     </div>
   </div>
-</talverify_tickets>
 
   <div class="order_details_row">
     <div class="order_state">
