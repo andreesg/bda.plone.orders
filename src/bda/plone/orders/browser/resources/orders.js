@@ -22,11 +22,16 @@
         orders.order_select_binder(document);
         orders.notification_binder(document);
         orders.qr_code_binder(document);
+        orders.barcode_binder(document);
         orders.cancel_confirm_binder(document);
         orders.comment_edit_binder(document);
     });
 
     var orders = {
+        barcode_binder: function(context) {
+            var text = $("#bcTarget").data('text');
+            $("#bcTarget").barcode(""+text, "code11", {barWidth: 3, barHeight:100, fontSize: 15});
+        },
 
         qr_code_binder: function(context) {
             $('.qr_code', context).each(function() {
@@ -43,6 +48,8 @@
                     correctLevel : QRCode.CorrectLevel.H
                 });
             });
+
+
         },
 
         datatable_binder: function(context) {

@@ -16,6 +16,10 @@
                        data-width string:100;
                        data-height string:100"></div>
 
+  <div id="bcTarget" tal:attributes="data-text string:${order/ordernumber}" style="position: absolute; top:1em; right: 1em; display: none;">
+    
+  </div>
+
   <strong i18n:translate="order_uid">Order UID:</strong>
   <span tal:replace="order/uid">UID</span>
   <br />

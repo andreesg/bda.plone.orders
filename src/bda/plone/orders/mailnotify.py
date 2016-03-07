@@ -92,7 +92,7 @@ class MailNotify(object):
             raise
         return data
 
-    def send_failed(self, data):
+    def send_failed(self, data, msg=""):
         receiver = "andre@itsnotthatkind.org"
         mailfrom = "andre@intk.com"
         timestamp = datetime.datetime.today().isoformat()
@@ -106,7 +106,7 @@ class MailNotify(object):
             email = data.attrs['personal_data.email']
 
             subject = "Order %s failed to generate pdf." %(ordernumber)
-            message = "\n[%s] Ordernumber %s\nOrder uid: %s\n\nPersonal details:\nFirst name: %s\nLast name: %s\nPhone: %s\nE-mail: %s" %(str(timestamp), ordernumber, order_uid, first_name, last_name, phone, email)
+            message = "\n[%s] Ordernumber %s\nOrder uid: %s\n\nPersonal details:\nFirst name: %s\nLast name: %s\nPhone: %s\nE-mail: %s\n\nError exception: %s" %(str(timestamp), ordernumber, order_uid, first_name, last_name, phone, email, msg)
         else:
             subject = "Order Unknown failed to generate pdf."
             message = "Order unknown failed to generate pdf.\nTimestamp: %s" %(str(timestamp))
@@ -136,10 +136,8 @@ class MailNotify(object):
             msg = MIMEMultipart('mixed')
             msg['Subject'] = subject
             msg['From'] = mailfrom
-            msg['To'] = receiver
 
-            text.attach(MIMEText(message, 'html', 'utf-8'))
-            msg.attach(text)
+            pdfAttachment = None
 
             try:
                 link = self.download_link.replace("http://new.teylersmuseum.nl/", "http://new.teylersmuseum.nl:14082/NewTeylers/")
@@ -148,10 +146,20 @@ class MailNotify(object):
                 pdfAttachment = MIMEApplication(data, _subtype = "pdf")
                 pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
 
-                msg.attach(pdfAttachment)
-            except:
-                self.send_failed(self.order_data.order)
+            except Exception, e:
+                error_msg = str(e)
+                self.send_failed(self.order_data.order, error_msg)
                 pass
+
+            if pdfAttachment:
+                text.attach(MIMEText(message, 'html', 'utf-8'))
+                msg.attach(text)
+                msg.attach(pdfAttachment)
+            else:
+                failed_text = "<p><a href='http://new.teylersmuseum.nl/nl/tickets/etickets=order_id=%s'>Download e-ticket(s)</a></p>"
+                message = message + failed_text
+                text.attach(MIMEText(message, 'html', 'utf-8'))
+                msg.attach(text)
 
             s = smtplib.SMTP('127.0.0.1')
             s.sendmail(mailfrom, receiver, msg.as_string())
