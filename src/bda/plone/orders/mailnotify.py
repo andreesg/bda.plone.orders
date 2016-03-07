@@ -156,7 +156,7 @@ class MailNotify(object):
                 msg.attach(text)
                 msg.attach(pdfAttachment)
             else:
-                failed_text = "<p><a href='http://new.teylersmuseum.nl/nl/tickets/etickets=order_id=%s'>Download e-ticket(s)</a></p>"
+                failed_text = "<p><a href='http://new.teylersmuseum.nl/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"
                 message = message + failed_text
                 text.attach(MIMEText(message, 'html', 'utf-8'))
                 msg.attach(text)
