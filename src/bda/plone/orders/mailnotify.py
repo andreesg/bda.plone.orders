@@ -86,7 +86,7 @@ class MailNotify(object):
         opener.addheaders.append(('User-Agent', 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.2.11) Gecko/20101012 Firefox/3.6.11'))
         request = urllib2.Request(url)
         try:
-            f = opener.open(request, timeout=20)
+            f = opener.open(request, timeout=120)
             data = f.read()
         except:
             raise
