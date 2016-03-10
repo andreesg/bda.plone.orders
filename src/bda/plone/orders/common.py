@@ -363,7 +363,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['shipping_description'] = shipping.description
 
             try:
-                country_param = "checkout.delivery_address.country"
+                country_param = "checkout.billing_address.country"
                 country_code = data.fetch(country_param).extracted
                 billing_type = ""
 
