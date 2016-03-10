@@ -363,17 +363,16 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             order.attrs['shipping_description'] = shipping.description
 
             try:
-                country_param = "checkout.personal_data.woonplaats"
+                country_param = "checkout.delivery_address.country"
                 country_code = data.fetch(country_param).extracted
                 billing_type = ""
-                if country_code == "528":
+
+                if country_code == "528" or country_code == "":
                     billing_type = ""
                 elif country_code in EU_COUNTRIES:
                     billing_type = "eu"
                 else:
                     billing_type = "non-eu"
-
-                print billing_type
 
                 shipping_net = shipping.net(self.items, billing_type)
                 shipping_vat = shipping.vat(self.items, billing_type)
