@@ -275,9 +275,9 @@ class ExportOrdersForm(YAMLForm):
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
         # exported column keys as first line
         ex.writerow(ORDER_HEADERS +
-                    COMPUTED_ORDER_EXPORT_ATTRS.keys() +
+                    COMPUTED_ORDER_HEADERS +
                     BOOKING_HEADERS +
-                    COMPUTED_BOOKING_EXPORT_ATTRS.keys())
+                    BOOKING_HEADERS)
         # query orders
         for order in orders_soup.query(query):
             # restrict order bookings for current vendor_uids
