@@ -279,7 +279,7 @@ class ExportOrdersForm(YAMLForm):
                     BOOKING_HEADERS +
                     COMPUTED_HEADERS)
         # query orders
-        for order in orders_soup.query(query):
+        for order in orders_soup.query(query, sort_index='created'):
             # restrict order bookings for current vendor_uids
             order_data = OrderData(self.context,
                                    order=order,
