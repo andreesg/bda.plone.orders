@@ -204,7 +204,7 @@
   <browser:page
     for="*"
     name="exportorders_contextual"
-    class=".export.ExportOrdersContext"
+    class=".export.ExportOrdersContextual"
     permission="bda.plone.orders.ExportOrders"
     layer="..interfaces.IOrdersExtensionLayer"/>
 

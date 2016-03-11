@@ -70,7 +70,21 @@ ORDER_EXPORT_ATTRS = [
     'order_comment.comment',
     'payment_selection.payment',
 ]
+
+ORDER_EXPORT_ATTRS_EXTENDED = [
+    'created',
+    'ordernumber',
+    'payment_selection.payment'
+]
+
+ORDER_HEADERS = [
+    'Datum',
+    'Bestelnummer',
+    'Betaling'
+]
+
 COMPUTED_ORDER_EXPORT_ATTRS = odict()
+
 BOOKING_EXPORT_ATTRS = [
     'title',
     'buyable_comment',
@@ -84,6 +98,26 @@ BOOKING_EXPORT_ATTRS = [
     'salaried',
     'exported',
 ]
+
+
+BOOKING_EXPORT_ATTRS_EXTENDED = [
+    'title',
+    'item_number',
+    'buyable_count',
+    'net',
+    'vat',
+    'salaried'
+]
+
+BOOKING_HEADERS = [
+    'Titel',
+    'Artikelnummer',
+    'Aantal',
+    'Netto',
+    'BTW',
+    'Betaald'
+]
+
 COMPUTED_BOOKING_EXPORT_ATTRS = odict()
 
 
@@ -110,9 +144,13 @@ def buyable_url(context, booking):
     return None
 
 
-COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
-COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
+#COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
+#COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
 COMPUTED_BOOKING_EXPORT_ATTRS['buyable_url'] = buyable_url
+
+COMPUTED_HEADERS = [
+    'URL'
+]
 
 
 def cleanup_for_csv(value):
@@ -176,6 +214,20 @@ class ExportOrdersForm(YAMLForm):
         Since the record object is available, you can return aggregated values.
         """
         val = record.attrs.get(attr_name)
+
+        # Translate salaried val
+        if attr_name in ['salaried']:
+            if val == 'yes':
+                val = 'Ja'
+            elif val == 'no':
+                val = 'Nee'
+            else:
+                val = val
+
+        if attr_name in ['payment_selection.payment']:
+            if val == 'mollie_payment':
+                val = "iDeal"
+
         return cleanup_for_csv(val)
 
     def csv(self, request):
@@ -205,9 +257,9 @@ class ExportOrdersForm(YAMLForm):
         sio = StringIO()
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
         # exported column keys as first line
-        ex.writerow(ORDER_EXPORT_ATTRS +
+        ex.writerow(ORDER_HEADERS +
                     COMPUTED_ORDER_EXPORT_ATTRS.keys() +
-                    BOOKING_EXPORT_ATTRS +
+                    BOOKING_HEADERS +
                     COMPUTED_BOOKING_EXPORT_ATTRS.keys())
         # query orders
         for order in orders_soup.query(query):
@@ -217,7 +269,7 @@ class ExportOrdersForm(YAMLForm):
                                    vendor_uids=vendor_uids)
             order_attrs = list()
             # order export attrs
-            for attr_name in ORDER_EXPORT_ATTRS:
+            for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
                 val = self.export_val(order, attr_name)
                 order_attrs.append(val)
             # computed order export attrs
@@ -229,7 +281,7 @@ class ExportOrdersForm(YAMLForm):
             for booking in order_data.bookings:
                 booking_attrs = list()
                 # booking export attrs
-                for attr_name in BOOKING_EXPORT_ATTRS:
+                for attr_name in BOOKING_EXPORT_ATTRS_EXTENDED:
                     val = self.export_val(booking, attr_name)
                     booking_attrs.append(val)
                 # computed booking export attrs
@@ -279,6 +331,20 @@ class ExportOrdersContextual(BrowserView):
         Since the record object is available, you can return aggregated values.
         """
         val = record.attrs.get(attr_name)
+        
+        # Translate salaried val
+        if attr_name in ['salaried']:
+            if val == 'yes':
+                val = 'Ja'
+            elif val == 'no':
+                val = 'Nee'
+            else:
+                val = val
+
+        if attr_name in ['payment_selection.payment']:
+            if val == 'mollie_payment':
+                val = "iDeal"
+
         return cleanup_for_csv(val)
 
     def get_csv(self):
@@ -288,10 +354,10 @@ class ExportOrdersContextual(BrowserView):
         sio = StringIO()
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
         # exported column keys as first line
-        ex.writerow(ORDER_EXPORT_ATTRS +
+        ex.writerow(ORDER_HEADERS +
                     COMPUTED_ORDER_EXPORT_ATTRS.keys() +
-                    BOOKING_EXPORT_ATTRS +
-                    COMPUTED_BOOKING_EXPORT_ATTRS.keys())
+                    BOOKING_HEADERS +
+                    COMPUTED_HEADERS)
 
         bookings_soup = get_bookings_soup(context)
 
@@ -309,11 +375,12 @@ class ExportOrdersContextual(BrowserView):
 
         query_b = query_b & Any('buyable_uid', buyable_uids)
 
+
         all_orders = {}
-        for booking in bookings_soup.query(query_b):
+        for booking in bookings_soup.query(query_b, sort_index='created'):
             booking_attrs = list()
             # booking export attrs
-            for attr_name in BOOKING_EXPORT_ATTRS:
+            for attr_name in BOOKING_EXPORT_ATTRS_EXTENDED:
                 val = self.export_val(booking, attr_name)
                 booking_attrs.append(val)
             # computed booking export attrs
@@ -332,7 +399,7 @@ class ExportOrdersContextual(BrowserView):
                                        vendor_uids=vendor_uids)
                 order_attrs = list()
                 # order export attrs
-                for attr_name in ORDER_EXPORT_ATTRS:
+                for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
                     val = self.export_val(order, attr_name)
                     order_attrs.append(val)
                 # computed order export attrs
