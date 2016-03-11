@@ -228,6 +228,12 @@ class ExportOrdersForm(YAMLForm):
             if val == 'mollie_payment':
                 val = "iDeal"
 
+        if attr_name in ['item_number']:
+            if not val:
+                uid = record.attrs.get('buyable_uid')
+                obj = get_object_by_uid(self.context, uid)
+                val = getattr(obj, 'item_number', '')
+
         return cleanup_for_csv(val)
 
     def csv(self, request):
@@ -344,6 +350,12 @@ class ExportOrdersContextual(BrowserView):
         if attr_name in ['payment_selection.payment']:
             if val == 'mollie_payment':
                 val = "iDeal"
+
+        if attr_name in ['item_number']:
+            if not val:
+                uid = record.attrs.get('buyable_uid')
+                obj = get_object_by_uid(self.context, uid)
+                val = getattr(obj, 'item_number', '')
 
         return cleanup_for_csv(val)
 
