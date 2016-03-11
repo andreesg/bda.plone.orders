@@ -35,6 +35,7 @@ import plone.api
 import uuid
 import yafowil.loader  # loads registry  # nopep8
 
+from bda.plone.cart import ascur
 
 class DialectExcelWithColons(csv.excel):
     delimiter = ';'
@@ -74,13 +75,15 @@ ORDER_EXPORT_ATTRS = [
 ORDER_EXPORT_ATTRS_EXTENDED = [
     'created',
     'ordernumber',
-    'payment_selection.payment'
+    'payment_selection.payment',
+    'order_comment.comment'
 ]
 
 ORDER_HEADERS = [
     'Datum',
     'Bestelnummer',
-    'Betaling'
+    'Betaling',
+    'Commentaar'
 ]
 
 COMPUTED_ORDER_EXPORT_ATTRS = odict()
@@ -113,7 +116,7 @@ BOOKING_HEADERS = [
     'Titel',
     'Artikelnummer',
     'Aantal',
-    'Netto',
+    'Artikel netto',
     'BTW',
     'Betaald'
 ]
@@ -143,13 +146,21 @@ def buyable_url(context, booking):
         return obj.absolute_url()
     return None
 
+def order_total(context, order):
+    return ascur(order.total)
 
 #COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
 #COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
 COMPUTED_BOOKING_EXPORT_ATTRS['buyable_url'] = buyable_url
+COMPUTED_ORDER_EXPORT_ATTRS['order_total'] = order_total
+
 
 COMPUTED_HEADERS = [
     'URL'
+]
+
+COMPUTED_ORDER_HEADERS = [
+    'Totaal'
 ]
 
 
@@ -359,6 +370,79 @@ class ExportOrdersContextual(BrowserView):
 
         return cleanup_for_csv(val)
 
+
+    def get_csv_orders(self):
+        context = self.context
+
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow(ORDER_HEADERS +
+                    COMPUTED_ORDER_HEADERS +
+                    BOOKING_HEADERS +
+                    COMPUTED_HEADERS)
+
+        bookings_soup = get_bookings_soup(context)
+        orders_soup = get_orders_soup(context)
+
+        # First, filter by allowed vendor areas
+        vendor_uids = get_vendor_uids_for()
+        query_b = Any('vendor_uid', vendor_uids)
+
+        # Second, query for the buyable
+        query_cat = {}
+        query_cat['object_provides'] = IBuyable.__identifier__
+        query_cat['path'] = '/'.join(context.getPhysicalPath())
+        cat = getToolByName(context, 'portal_catalog')
+        res = cat(**query_cat)
+        buyable_uids = [IUUID(it.getObject()) for it in res]
+
+        query_b = query_b & Any('buyable_uid', buyable_uids)
+
+
+
+        all_orders = {}
+
+        """for booking in bookings_soup.query(query_b, sort_index='created'):
+            booking_attrs = list()
+            # booking export attrs
+            for attr_name in BOOKING_EXPORT_ATTRS_EXTENDED:
+                val = self.export_val(booking, attr_name)
+                booking_attrs.append(val)
+            # computed booking export attrs
+            for attr_name in COMPUTED_BOOKING_EXPORT_ATTRS:
+                cb = COMPUTED_BOOKING_EXPORT_ATTRS[attr_name]
+                val = cb(context, booking)
+                val = cleanup_for_csv(val)
+                booking_attrs.append(val)
+
+            # create order_attrs, if it doesn't exist
+            order_uid = booking.attrs.get('order_uid')
+            if order_uid not in all_orders:
+                order = get_order(context, order_uid)
+                order_data = OrderData(context,
+                                       order=order,
+                                       vendor_uids=vendor_uids)
+                order_attrs = list()
+                # order export attrs
+                for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
+                    val = self.export_val(order, attr_name)
+                    order_attrs.append(val)
+                # computed order export attrs
+                for attr_name in COMPUTED_ORDER_EXPORT_ATTRS:
+                    cb = COMPUTED_ORDER_EXPORT_ATTRS[attr_name]
+                    val = cb(self.context, order_data)
+                    val = cleanup_for_csv(val)
+                    order_attrs.append(val)
+                all_orders[order_uid] = order_attrs
+
+            ex.writerow(all_orders[order_uid] + booking_attrs)"""
+
+        ret = sio.getvalue()
+        sio.close()
+        return ret
+
     def get_csv(self):
         context = self.context
 
@@ -367,7 +451,7 @@ class ExportOrdersContextual(BrowserView):
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
         # exported column keys as first line
         ex.writerow(ORDER_HEADERS +
-                    COMPUTED_ORDER_EXPORT_ATTRS.keys() +
+                    COMPUTED_ORDER_HEADERS +
                     BOOKING_HEADERS +
                     COMPUTED_HEADERS)
 
