@@ -277,7 +277,7 @@ class ExportOrdersForm(YAMLForm):
         ex.writerow(ORDER_HEADERS +
                     COMPUTED_ORDER_HEADERS +
                     BOOKING_HEADERS +
-                    BOOKING_HEADERS)
+                    COMPUTED_HEADERS)
         # query orders
         for order in orders_soup.query(query):
             # restrict order bookings for current vendor_uids
