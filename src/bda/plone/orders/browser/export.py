@@ -34,6 +34,7 @@ import datetime
 import plone.api
 import uuid
 import yafowil.loader  # loads registry  # nopep8
+from Products.CMFPlone.interfaces import IPloneSiteRoot
 
 from bda.plone.cart import ascur
 
@@ -247,7 +248,89 @@ class ExportOrdersForm(YAMLForm):
 
         return cleanup_for_csv(val)
 
+    def _get_buyables_in_context(self):
+        catalog = plone.api.portal.get_tool("portal_catalog")
+        path = '/'.join(self.context.getPhysicalPath())
+        brains = catalog(path=path, object_provides=IBuyable.__identifier__)
+        for brain in brains:
+            yield brain.UID
+
+    def csv_context(self):
+        context = self.context
+
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow(ORDER_HEADERS +
+                    COMPUTED_ORDER_HEADERS +
+                    BOOKING_HEADERS +
+                    COMPUTED_HEADERS)
+
+        bookings_soup = get_bookings_soup(context)
+
+        # First, filter by allowed vendor areas
+        vendor_uids = get_vendor_uids_for()
+        query_b = Ge('created', self.from_date) & Le('created', self.to_date)
+        query_b = query_b & Any('vendor_uid', vendor_uids)
+
+        # Second, query for the buyable
+        buyable_uids = self._get_buyables_in_context()
+        query_b = query_b & Any('buyable_uid', buyable_uids)
+
+        all_orders = {}
+        for booking in bookings_soup.query(query_b, sort_index='created'):
+            booking_attrs = list()
+            # booking export attrs
+            for attr_name in BOOKING_EXPORT_ATTRS_EXTENDED:
+                val = self.export_val(booking, attr_name)
+                booking_attrs.append(val)
+            # computed booking export attrs
+            for attr_name in COMPUTED_BOOKING_EXPORT_ATTRS:
+                cb = COMPUTED_BOOKING_EXPORT_ATTRS[attr_name]
+                val = cb(context, booking)
+                val = cleanup_for_csv(val)
+                booking_attrs.append(val)
+
+            # create order_attrs, if it doesn't exist
+            order_uid = booking.attrs.get('order_uid')
+            if order_uid not in all_orders:
+                order = get_order(context, order_uid)
+                order_data = OrderData(context,
+                                       order=order,
+                                       vendor_uids=vendor_uids)
+                order_attrs = list()
+                # order export attrs
+                for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
+                    val = self.export_val(order, attr_name)
+                    order_attrs.append(val)
+                # computed order export attrs
+                for attr_name in COMPUTED_ORDER_EXPORT_ATTRS:
+                    cb = COMPUTED_ORDER_EXPORT_ATTRS[attr_name]
+                    val = cb(self.context, order_data)
+                    val = cleanup_for_csv(val)
+                    order_attrs.append(val)
+                all_orders[order_uid] = order_attrs
+
+            ex.writerow(all_orders[order_uid] + booking_attrs)
+        
+        s_start = self.from_date.strftime('%G-%m-%d_%H-%M-%S')
+        s_end = self.to_date.strftime('%G-%m-%d_%H-%M-%S')
+        filename = 'orders-export-%s-%s.csv' % (s_start, s_end)
+        self.request.response.setHeader('Content-Type', 'text/csv')
+        self.request.response.setHeader('Content-Disposition',
+                                        'attachment; filename=%s' % filename)
+
+        ret = sio.getvalue()
+        sio.close()
+        return ret
+
+
     def csv(self, request):
+
+        if not IPloneSiteRoot.providedBy(self.context):
+            return self.csv_context()
+
         # get orders soup
         orders_soup = get_orders_soup(self.context)
         # get bookings soup
@@ -255,7 +338,10 @@ class ExportOrdersForm(YAMLForm):
         # fetch user vendor uids
         vendor_uids = get_vendor_uids_for()
         # base query for time range
+        # Second, query for the buyable
+
         query = Ge('created', self.from_date) & Le('created', self.to_date)
+
         # filter by given vendor uid or user vendor uids
         vendor_uid = self.vendor
         if vendor_uid:
@@ -270,6 +356,7 @@ class ExportOrdersForm(YAMLForm):
         customer = self.customer
         if customer:
             query = query & Eq('creator', customer)
+
         # prepare csv writer
         sio = StringIO()
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
@@ -295,6 +382,7 @@ class ExportOrdersForm(YAMLForm):
                 val = cb(self.context, order_data)
                 val = cleanup_for_csv(val)
                 order_attrs.append(val)
+            
             for booking in order_data.bookings:
                 booking_attrs = list()
                 # booking export attrs

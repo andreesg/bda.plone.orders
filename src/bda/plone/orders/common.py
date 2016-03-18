@@ -825,6 +825,7 @@ class PaymentData(object):
 
     def data(self, order_uid):
         self.order_uid = order_uid
+        
         return {
             'amount': self.amount,
             'currency': self.currency,
