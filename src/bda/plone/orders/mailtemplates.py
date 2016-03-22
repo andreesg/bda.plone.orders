@@ -36,11 +36,11 @@ ORDER_TICKET_NL = """\
 <html>
     <head></head>
     <body>
-        <p>Hartelijk bedankt voor uw bestelling. Uw tickets zijn bijgevoegd in de bijlage. Wij kijken zeer uit naar uw komst.</p>
+        <p>Hartelijk bedankt voor je bestelling. De tickets vind je in de bijlage. Deze zijn geldig tot één jaar na de aankoopdatum. Graag tot ziens in het museum!</p>
 
-        <p>Heeft u vragen over uw bestelling, neem dan contact opnemen met info@teylersmuseum.nl.</p>
+        <p>Heb je vragen over je bestelling, neem dan contact op met info@teylersmuseum.nl.</p>
 
-        <p>De website van het Teylers Museum bevat veel achtergrond- en actuele informatie. Mocht u alvast uw bezoek willen voorbereiden gaat u dan naar <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
+        <p>Bekijk de website van Teylers Museum voor een actueel overzicht van tentoonstellingn en activiteiten: <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
     </body>
 </html>
 """
