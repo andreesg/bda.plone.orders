@@ -76,6 +76,11 @@ def dispatch_notify_booking_cancelled(event):
         func(event)
 
 
+def dispatch_notify_item_out_of_stock(event):
+    for func in NOTIFICATIONS['item_out_of_stock']:
+        func(event)
+
+
 class MailNotify(object):
     """Mail notifyer.
     """
