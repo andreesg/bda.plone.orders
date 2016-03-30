@@ -2,6 +2,7 @@
 from Products.CMFPlone.utils import safe_unicode
 from bda.plone.cart import ascur
 from bda.plone.cart import get_catalog_brain
+from bda.plone.cart import get_object_by_uid
 from bda.plone.checkout.interfaces import ICheckoutEvent
 from bda.plone.checkout.interfaces import ICheckoutSettings
 from bda.plone.orders import interfaces as ifaces
@@ -11,6 +12,7 @@ from bda.plone.orders import vocabularies as vocabs
 from bda.plone.orders.common import DT_FORMAT
 from bda.plone.orders.common import OrderData
 from bda.plone.orders.interfaces import IBookingCancelledEvent
+from bda.plone.orders.interfaces import IItemOutOfStockEvent
 from bda.plone.orders.interfaces import IGlobalNotificationText
 from bda.plone.orders.interfaces import IItemNotificationText
 from bda.plone.orders.interfaces import INotificationSettings
@@ -18,6 +20,7 @@ from bda.plone.orders.interfaces import IPaymentText
 from bda.plone.orders.mailtemplates import get_booking_cancelled_templates
 from bda.plone.orders.mailtemplates import get_order_templates
 from bda.plone.orders.mailtemplates import get_reservation_templates
+from bda.plone.orders.mailtemplates import get_item_out_of_stock_templates
 from bda.plone.payment.interfaces import IPaymentEvent
 from email.utils import formataddr
 from plone import api
@@ -26,6 +29,9 @@ from zope.globalrequest import getRequest
 from zope.i18n import translate
 from decimal import Decimal
 from bda.plone.checkout.vocabularies import get_pycountry_name
+
+from bda.plone.cart import get_object_by_uid
+from bda.plone.cart import get_item_stock
 
 import requests
 import logging
@@ -52,8 +58,8 @@ NOTIFICATIONS = {
     'checkout_success': [],
     'payment_success': [],
     'booking_cancelled': [],
+    'item_out_of_stock': []
 }
-
 
 def dispatch_notify_checkout_success(event):
     for func in NOTIFICATIONS['checkout_success']:
@@ -185,6 +191,11 @@ class MailNotify(object):
                 subject=subject,
                 body=msg.as_string()
             )
+
+            order = self.order_data
+
+
+
 
 
 
@@ -603,6 +614,8 @@ def get_order_uid(event):
         return event.order_uid
     if IBookingCancelledEvent.providedBy(event):
         return event.order_uid
+    if IItemOutOfStockEvent.providedBy(event):
+        return event.order_uid
 
 
 def notify_order_success(event, who=None):
@@ -664,6 +677,37 @@ def notify_booking_cancelled(event, who=None):
             'kw "who" mus be one out of ("customer", "shopmanager")'
         )
 
+class ItemsOutOfStockCB(object):
+
+    def __init__(self, event):
+        self.event = event
+
+    def __call__(self, *args):
+        items_out_of_stock_text = ""
+        items = self.event.items_out_of_stock
+        for item_attrs in items:
+            title = item_attrs['title']
+            remaining_stock = item_attrs['remaining_stock_available']
+            item_out_of_stock_text += "%s (Remaining stock: %s)\n" %(title, remaining_stock)
+
+        return item_out_of_stock_text
+
+
+def notify_item_out_of_stock(event, who=None):
+    """Send notification mail when item is getting out of stock.
+    """
+    order_data = OrderData(event.context, uid=get_order_uid(event))
+    templates = dict()
+    templates.update(get_item_out_of_stock_templates(event.context))
+    templates['items_out_of_stock_cb'] = ItemsOutOfStockCB(event)
+
+    if who == 'shopmanager':
+        do_notify_shopmanager(event.context, order_data, templates)
+    else:
+        raise ValueError(
+            'kw "who" mus be one out of ("customer", "shopmanager")'
+        )
+
 
 # below here we have the actual events
 
@@ -713,3 +757,9 @@ def notify_booking_cancelled_shopmanager(event):
 
 NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_customer)
 NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_shopmanager)
+
+def notify_item_out_of_stock_shopmanager(event):
+    notify_item_out_of_stock(event, who="shopmanager")
+
+NOTIFICATIONS['item_out_of_stock'].append(notify_item_out_of_stock_shopmanager)
+

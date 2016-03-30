@@ -23,6 +23,7 @@ from bda.plone.payment import Payments
 from bda.plone.payment.interfaces import IPaymentData
 from bda.plone.shipping import Shippings
 from bda.plone.shipping.interfaces import IShippingItem
+from bda.plone.shop.utils import get_shop_article_settings
 from decimal import Decimal
 from node.ext.zodb import OOBTNode
 from node.utils import instance_property
@@ -421,9 +422,28 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # add order
         orders_soup.add(order)
         # add bookings
+
+        items_out_of_stock = list()
+        items_out_of_stock_limit = get_shop_article_settings().default_item_minimum_stock
+
         bookings_soup = get_bookings_soup(self.context)
         for booking in bookings:
             bookings_soup.add(booking)
+
+            # Item is getting out of stock
+            if items_out_of_stock_limit:
+                if booking.attrs['remaining_stock_available'] <= items_out_of_stock_limit:
+                    items_out_of_stock.append(booking.attrs)
+
+        if items_out_of_stock:
+            event = events.ItemOutOfStockEvent(
+                self.context,
+                self.request,
+                order.attrs['uid'],
+                items_out_of_stock,
+            )
+            notify(event)
+
         # return uid of added order
         return uid
 
