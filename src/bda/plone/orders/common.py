@@ -423,24 +423,27 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         orders_soup.add(order)
         # add bookings
 
-        items_out_of_stock = list()
-        items_out_of_stock_limit = get_shop_article_settings().default_item_minimum_stock
+        items_stock_threshold_reached = list()
 
         bookings_soup = get_bookings_soup(self.context)
         for booking in bookings:
             bookings_soup.add(booking)
 
-            # Item is getting out of stock
-            if items_out_of_stock_limit:
-                if booking.attrs['remaining_stock_available'] <= items_out_of_stock_limit:
-                    items_out_of_stock.append(booking.attrs)
+            buyable = get_object_by_uid(self.context, booking.attrs['buyable_uid'])
+            item_stock = get_item_stock(buyable)
+            stock_warning_threshold = item_stock.stock_warning_threshold
 
-        if items_out_of_stock:
-            event = events.ItemOutOfStockEvent(
+            if stock_warning_threshold:
+                if booking.attrs['remaining_stock_available'] <= stock_warning_threshold:
+                    # Item is getting out of stock
+                    items_stock_threshold_reached.append(booking.attrs)
+
+        if items_stock_threshold_reached:
+            event = events.StockThresholdReached(
                 self.context,
                 self.request,
                 order.attrs['uid'],
-                items_out_of_stock,
+                items_stock_threshold_reached,
             )
             notify(event)
 
