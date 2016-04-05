@@ -50,9 +50,11 @@ import plone.api
 import time
 import uuid
 
+# TM
+from plonetheme.museumbase.browser.tickets.behaviors import get_number_of_barcodes, get_barcode
 
 logger = logging.getLogger('bda.plone.checkout')
-
+NOT_ALLOWED = ['', ' ', None, '\n', '\r']
 
 DT_FORMAT = '%d.%m.%Y %H:%M'
 
@@ -472,15 +474,47 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             logger.warning(msg)
             raise CheckoutError(msg)
         item_stock = get_item_stock(buyable)
+        
+        # Barcodes
+        use_barcodes = getattr(buyable, 'use_barcodes', None)
+
+        # Create new booking
+        booking = OOBTNode()
+        booking.attrs['redeemed'] = []
+
+        if use_barcodes:
+            to_redeem = []
+            for i in range(count):
+                barcode = get_barcode(buyable)
+                if barcode in NOT_ALLOWED:
+                    msg = u'Item has an invalid barcode available {0}'.format(buyable.id)
+                    logger.warning(msg)
+                    raise CheckoutError(msg)
+                else:
+                    to_redeem.append(barcode)
+            if len(to_redeem) != count:
+                msg = u'Not enough barcodes generated for {0}'.format(buyable.id)
+                logger.warning(msg)
+                raise CheckoutError(msg)
+        else:
+            to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), (i+1)) for i in range(count)]
+
+        booking.attrs['to_redeem'] = to_redeem
+
         if item_stock.available is not None:
-            item_stock.available -= float(count)
+            # Check barcodes
+            if use_barcodes:
+                new_stock = get_number_of_barcodes(buyable, buyable.barcode_list, True)
+                item_stock.available = new_stock
+            else:
+                item_stock.available -= float(count)
+
         available = item_stock.available
         state = ifaces.STATE_NEW if available is None or available >= 0.0\
             else ifaces.STATE_RESERVED
         item_data = get_item_data_provider(buyable)
         vendor = acquire_vendor_or_shop_root(buyable)
 
-        booking = OOBTNode()
         booking.attrs['email'] = order.attrs['personal_data.email']
         booking.attrs['uid'] = uuid.uuid4()
         booking.attrs['buyable_uid'] = uid
@@ -499,12 +533,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         booking.attrs['quantity_unit'] = item_data.quantity_unit
         booking.attrs['remaining_stock_available'] = available
         booking.attrs['state'] = state
-        booking.attrs['salaried'] = ifaces.SALARIED_NO
-
-        booking.attrs['redeemed'] = []
-        to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), (i+1)) for i in range(count)]
-        booking.attrs['to_redeem'] = to_redeem
-        
+        booking.attrs['salaried'] = ifaces.SALARIED_NO        
         booking.attrs['personal_data.firstname'] = order.attrs['personal_data.firstname']
         booking.attrs['personal_data.lastname'] = order.attrs['personal_data.lastname']
 
