@@ -435,8 +435,9 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             item_stock = get_item_stock(buyable)
             stock_warning_threshold = item_stock.stock_warning_threshold
 
+            remaining_stock_available = booking.attrs['remaining_stock_available']
             if stock_warning_threshold:
-                if booking.attrs['remaining_stock_available'] <= stock_warning_threshold:
+                if remaining_stock_available != None and remaining_stock_available <= stock_warning_threshold:
                     # Item is getting out of stock
                     items_stock_threshold_reached.append(booking.attrs)
 
