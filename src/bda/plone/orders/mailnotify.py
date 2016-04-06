@@ -696,7 +696,7 @@ class StockThresholdReachedCB(object):
             remaining_stock = item_attrs['remaining_stock_available']
             items_stock_threshold_reached_text += "%s (Remaining stock: %s)\n" %(title, remaining_stock)
 
-        return item_out_of_stock_text
+        return items_stock_threshold_reached_text
 
 
 def notify_stock_threshold_reached(event):
