@@ -481,6 +481,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # Create new booking
         booking = OOBTNode()
         booking.attrs['redeemed'] = []
+        booking.attrs['uid'] = uuid.uuid4()
 
         if use_barcodes:
             to_redeem = []
@@ -516,7 +517,6 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         vendor = acquire_vendor_or_shop_root(buyable)
 
         booking.attrs['email'] = order.attrs['personal_data.email']
-        booking.attrs['uid'] = uuid.uuid4()
         booking.attrs['buyable_uid'] = uid
         booking.attrs['buyable_count'] = count
         booking.attrs['buyable_comment'] = comment
