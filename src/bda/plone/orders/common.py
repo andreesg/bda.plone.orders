@@ -480,9 +480,9 @@ class OrderCheckoutAdapter(CheckoutAdapter):
 
         # Create new booking
         booking = OOBTNode()
-        booking.attrs['redeemed'] = []
         booking.attrs['uid'] = uuid.uuid4()
 
+        booking.attrs['redeemed'] = []
         if use_barcodes:
             to_redeem = []
             for i in range(count):

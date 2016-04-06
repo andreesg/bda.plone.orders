@@ -573,7 +573,8 @@ RESERVATION_TEMPLATES = {
     'en': {
         'subject': RESERVATION_SUBJECT_EN,
         'body': RESERVATION_BODY_EN,
-        'delivery_address': DELIVERY_ADDRESS_EN},
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'ticket': RESERVATION_BODY_EN},
     'de': {
         'subject': RESERVATION_SUBJECT_DE,
         'body': RESERVATION_BODY_DE,
@@ -595,7 +596,8 @@ RESERVATION_TEMPLATES = {
 CANCELLED_BOOKING_TEMPLATES = {
     'en': {
         'subject': CANCELLED_BOOKING_SUBJECT_EN,
-        'body': CANCELLED_BOOKING_BODY_EN},
+        'body': CANCELLED_BOOKING_BODY_EN,
+        'ticket': CANCELLED_BOOKING_BODY_EN},
     'de': {
         'subject': CANCELLED_BOOKING_SUBJECT_DE,
         'body': CANCELLED_BOOKING_BODY_DE},
@@ -613,7 +615,8 @@ CANCELLED_BOOKING_TEMPLATES = {
 STOCK_THRESHOLD_REACHED_TEMPLATES = {
     'en': {
         'subject': STOCK_THRESHOLD_REACHED_SUBJECT_EN,
-        'body': STOCK_THRESHOLD_REACHED_BODY_EN
+        'body': STOCK_THRESHOLD_REACHED_BODY_EN,
+        'ticket': STOCK_THRESHOLD_REACHED_BODY_EN
     }
 }
 
