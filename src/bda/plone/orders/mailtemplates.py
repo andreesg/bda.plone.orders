@@ -21,7 +21,7 @@ ORDER_STOCK_LOW_SUBJECT_NL = "Product %s is getting out of stock."
 ORDER_STOCK_LOW_SUBJECT_EN = "Product %s is getting out of stock."
 
 
-RESERVATION_SUBJECT_EN = u'Reservation %s received.'
+RESERVATION_SUBJECT_EN = u'Bevestiging van je bestelling %s'
 
 ORDER_TICKET_EN = """\
 <html>
@@ -95,6 +95,7 @@ ORDER_BODY_NL = """
         Email: %(personal_data.email)s</p>
 
         <p>Adres:<br>
+        %(personal_data.firstname)s %(personal_data.lastname)s<br>
         %(billing_address.street)s<br>
         %(billing_address.city)s %(billing_address.zip)s<br>
         %(country_fixed)s<br>
@@ -117,32 +118,43 @@ ORDER_BODY_NL = """
 """
 
 RESERVATION_BODY_EN = """
-Date: %(date)s
+<html>
+    <head></head>
+    <body>
+        <p>Beste %(personal_data.firstname)s,</p>
 
-Thank you for your reservation:
+        <p>Hartelijk bedankt voor je bestelling %(ordernumber)s bij Teylers Museum.<br>
+        Je bestelling wordt standaard met TPG Post binnen 3-5 werkdagen verstuurd. </p>
 
-Ordernumber: %(ordernumber)s
-Reservation details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
+        <p>Je hebt betaald met: %(payment_selection)s<br>
 
-Personal Data:
-Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
-Phone: %(personal_data.phone)s
-Email: %(personal_data.email)s
+        <p>Uw bestelling wordt verzonden naar het onderstaande adres:
+        <br>Persoonsgegevens:<br>
+        Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        Telefoonnummer:  %(personal_data.phone)s<br>
+        Email: %(personal_data.email)s</p>
 
-Address:
-Street: %(billing_address.street)s
-ZIP: %(billing_address.zip)s
-City: %(billing_address.city)s
-Country: %(billing_address.country)s
-%(delivery_address)s
-Comment:
-%(order_comment.comment)s
+        <p>Adres:<br>
+        %(personal_data.firstname)s %(personal_data.lastname)s<br>
+        %(billing_address.street)s<br>
+        %(billing_address.city)s %(billing_address.zip)s<br>
+        %(country_fixed)s<br>
+        %(delivery_address)s</p>
 
-Ordered items:
-%(item_listing)s
+        <p>Hieronder vindt u een overzicht van uw bestelling:<br>
+        Opmerkingen:<br>
+        %(order_comment.comment)s</p>
 
-%(order_summary)s%(global_text)s%(payment_text)s
+        <p>Bestelde producten:<br>
+        %(item_listing)s
+        %(order_summary)s%(global_text)s%(payment_text)s</p>
+
+        <p>Ben je iets vergeten of heb je vragen over je bestelling?<br>
+        Kijk op onze website voor <a href='http://www.teylersmuseum.nl/nl/bezoek-het-museum/webwinkel/service/klantenservice/'>meer informatie</a> of mail naar:<br>
+        webshop@teylersmuseum.nl</p>
+</body>
+</html>
+
 """
 
 DELIVERY_ADDRESS_EN = """
