@@ -278,11 +278,6 @@ class BookingsTable(BrowserView):
                 'origin': 'o',
             },
             {
-                'id': 'personal_data.phone',
-                'label': _('phone', default=u'Phone'),
-                'origin': 'o',
-            },
-            {
                 'id': 'price_per_unit',
                 'label': _('price_per_unit', default=u'Price per unit'),
                 'renderer': self.render_price_per_unit,

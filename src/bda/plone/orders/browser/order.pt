@@ -40,8 +40,6 @@
       <strong i18n:translate="order_email">Email:</strong>
       <span tal:replace="order/personal_data.email">email</span>
       <br />
-      <strong i18n:translate="order_phone">Phone:</strong>
-      <span tal:replace="order/personal_data.phone">phone</span>
     </div>
 
   

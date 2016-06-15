@@ -59,7 +59,6 @@ Ordernumber: %(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Phone: %(personal_data.phone)s
 Email: %(personal_data.email)s
 
 Address:
@@ -91,13 +90,12 @@ ORDER_BODY_NL = """
         <p>Uw bestelling wordt verzonden naar het onderstaande adres:
         <br>Persoonsgegevens:<br>
         Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
-        Telefoonnummer:  %(personal_data.phone)s<br>
         Email: %(personal_data.email)s</p>
 
         <p>Adres:<br>
         %(personal_data.firstname)s %(personal_data.lastname)s<br>
         %(billing_address.street)s<br>
-        %(billing_address.city)s %(billing_address.zip)s<br>
+        %(billing_address.zip)s %(billing_address.city)s<br>
         %(country_fixed)s<br>
         %(delivery_address)s</p>
 
@@ -131,13 +129,12 @@ RESERVATION_BODY_EN = """
         <p>Uw bestelling wordt verzonden naar het onderstaande adres:
         <br>Persoonsgegevens:<br>
         Naam: %(personal_data.firstname)s %(personal_data.lastname)s<br>
-        Telefoonnummer:  %(personal_data.phone)s<br>
         Email: %(personal_data.email)s</p>
 
         <p>Adres:<br>
         %(personal_data.firstname)s %(personal_data.lastname)s<br>
         %(billing_address.street)s<br>
-        %(billing_address.city)s %(billing_address.zip)s<br>
+        %(billing_address.zip)s %(billing_address.city)s<br>
         %(country_fixed)s<br>
         %(delivery_address)s</p>
 
@@ -209,7 +206,6 @@ Details zur Bestellung: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 Persönliche Angaben:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
 Firma: %(personal_data.company)s
-Telefon: %(personal_data.phone)s
 E-Mail: %(personal_data.email)s
 
 Adresse:
@@ -238,7 +234,6 @@ Details zur Reservierung: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 Persönliche Angaben:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
 Firma: %(personal_data.company)s
-Telefon: %(personal_data.phone)s
 E-Mail: %(personal_data.email)s
 
 Adresse:
@@ -298,7 +293,6 @@ No. de commande: %(ordernumber)s
 Données personnelles:
 Nom: %(personal_data.firstname)s %(personal_data.lastname)s
 Entreprise: %(personal_data.company)s
-Téléphone: %(personal_data.phone)s
 E-Mail: %(personal_data.email)s
 
 Adresse:
@@ -327,7 +321,6 @@ No. de commande: %(ordernumber)s
 Données personnelles:
 Nom: %(personal_data.firstname)s %(personal_data.lastname)s
 Entreprise: %(personal_data.company)s
-Téléphone: %(personal_data.phone)s
 E-Mail: %(personal_data.email)s
 
 Adresse:
@@ -387,7 +380,6 @@ Numero d'ordine: %(ordernumber)s
 Dati personali:
 Nome: %(personal_data.firstname)s %(personal_data.lastname)s
 Ditta: %(personal_data.company)s
-Telefono: %(personal_data.phone)s
 
 Indirizzo:
 Via: %(billing_address.street)s
@@ -415,7 +407,6 @@ Numero d'ordine: %(ordernumber)s
 Dati personali:
 Nome: %(personal_data.firstname)s %(personal_data.lastname)s
 Ditta: %(personal_data.company)s
-Telefono: %(personal_data.phone)s
 
 Indirizzo:
 Via: %(billing_address.street)s
@@ -474,7 +465,6 @@ Ordernummer: %(ordernumber)s
 Personlig info:
 Navn: %(personal_data.firstname)s %(personal_data.lastname)s
 Firma: %(personal_data.company)s
-Telefon: %(personal_data.phone)s
 Epost: %(personal_data.email)s
 
 Adr:
@@ -503,7 +493,6 @@ Ordernummer: %(ordernumber)s
 Personlig info:
 Navn: %(personal_data.firstname)s %(personal_data.lastname)s
 Firma: %(personal_data.company)s
-Telefon: %(personal_data.phone)s
 Epost: %(personal_data.email)s
 
 Adr:
@@ -668,7 +657,7 @@ DEFAULT_TEMPLATE_ATTRS = {
     'personal_data.email': 'max.mustermann@example.com',
     'personal_data.gender': 'male',
     'personal_data.firstname': 'Max',
-    'personal_data.phone': '+43 123 456 78 90',
+    #'personal_data.phone': '+43 123 456 78 90',
     'personal_data.lastname': 'Mustermann',
     'billing_address.city': 'Springfield',
     'billing_address.country': 'Austria',

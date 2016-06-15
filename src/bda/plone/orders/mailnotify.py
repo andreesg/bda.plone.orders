@@ -112,11 +112,11 @@ class MailNotify(object):
             ordernumber = data.attrs['ordernumber']
             first_name = data.attrs['personal_data.firstname']
             last_name = data.attrs['personal_data.lastname']
-            phone = data.attrs['personal_data.phone']
+            #phone = data.attrs['personal_data.phone']
             email = data.attrs['personal_data.email']
 
             subject = "Order %s failed to generate pdf." %(ordernumber)
-            message = "\n[%s] Ordernumber %s\nOrder uid: %s\n\nPersonal details:\nFirst name: %s\nLast name: %s\nPhone: %s\nE-mail: %s\n\nError exception: %s" %(str(timestamp), ordernumber, order_uid, first_name, last_name, phone, email, msg)
+            message = "\n[%s] Ordernumber %s\nOrder uid: %s\n\nPersonal details:\nFirst name: %s\nLast name: %s\nE-mail: %s\n\nError exception: %s" %(str(timestamp), ordernumber, order_uid, first_name, last_name, email, msg)
         else:
             subject = "Order Unknown failed to generate pdf."
             message = "Order unknown failed to generate pdf.\nTimestamp: %s" %(str(timestamp))

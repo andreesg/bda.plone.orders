@@ -54,7 +54,7 @@ msgstr "Bestelnummer"
 #. Default: "Submit"
 #: browser/views.py:867
 msgid "anon_auth_label_submit"
-msgstr "Sturen"
+msgstr "Bekijk bestelling"
 
 #. Default: "Billing Address:"
 #: browser/order.pt:38
@@ -406,7 +406,7 @@ msgstr "E-mail:"
 #. Default: "Gender:"
 #: browser/order.pt:20
 msgid "order_gender"
-msgstr "Geslacht:"
+msgstr "Aanhef:"
 
 #. Default: "Name:"
 #: browser/order.pt:23

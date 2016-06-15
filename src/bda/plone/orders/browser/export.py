@@ -55,7 +55,7 @@ ORDER_EXPORT_ATTRS = [
     'personal_data.email',
     'personal_data.gender',
     'personal_data.firstname',
-    'personal_data.phone',
+    #'personal_data.phone',
     'personal_data.lastname',
     'billing_address.city',
     'billing_address.country',
