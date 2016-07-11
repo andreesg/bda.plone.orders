@@ -648,6 +648,9 @@ class OrderData(object):
     @salaried.setter
     def salaried(self, value):
         for booking in self.bookings:
+            # XXX: currently we need to delete attribute before setting to a new
+            #      value in order to persist change. fix in appropriate place.
+            del booking.attrs['salaried']
             booking.attrs['salaried'] = value
 
     @property
@@ -890,21 +893,20 @@ class PaymentData(object):
 def payment_success(event):
     # XXX: move concrete payment specific changes to bda.plone.payment and
     #      use ZCA for calling
-    if event.payment.pid == 'six_payment':
-        data = event.data
-        order = OrderData(event.context, uid=event.order_uid)
-        order.salaried = ifaces.SALARIED_YES
-        order.tid = data['tid']
+    data = event.data
+    order = OrderData(event.context, uid=event.order_uid)
+    order.salaried = ifaces.SALARIED_YES
+    #order.tid = data['tid']
 
 
 def payment_failed(event):
     # XXX: move concrete payment specific changes to bda.plone.payment and
     #      use ZCA for calling
-    if event.payment.pid == 'six_payment':
-        data = event.data
-        order = OrderData(event.context, uid=event.order_uid)
-        order.salaried = ifaces.SALARIED_FAILED
-        order.tid = data['tid']
+    #if event.payment.pid == 'six_payment':
+    data = event.data
+    order = OrderData(event.context, uid=event.order_uid)
+    order.salaried = ifaces.SALARIED_FAILED
+    #order.tid = data['tid']
 
 
 class OrderTransitions(object):

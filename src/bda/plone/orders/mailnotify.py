@@ -52,6 +52,10 @@ import cookielib
 import logging
 import textwrap
 
+from collective.sendaspdf.utils import extract_from_url, update_relative_url, find_filename, md5_hash
+from collective.sendaspdf.transforms import wk
+from random import randint
+
 logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {
@@ -84,11 +88,89 @@ class MailNotify(object):
     """Mail notifyer.
     """
 
+    def generate_filename_prefix(self):
+        return ''
+
+    def generate_temp_filename(self):
+        prefix = self.generate_filename_prefix()
+        now = datetime.datetime.now()
+        # Ok that might not be the best timestamp system, but it's
+        # enough for our needs.
+        timestamp = '-'.join([
+            ''.join([str(x) for x in now.timetuple()]),
+            str(now.microsecond),
+            str(randint(10000, 99999))])
+
+        filename = prefix + timestamp
+        return find_filename(self.tempdir, filename)
+
+    def generate_pdf_file(self, source):
+        """ Generates a PDF file from the given source
+        (string containing the HTML source of a page).
+        """
+        url = self.context.absolute_url()
+
+        filename = self.generate_temp_filename()
+        if not filename:
+            # XXX: need to send email
+            self.send_failed(self.order_data.order, "PDF filename failed to generated.")
+            return False
+
+        print_css = (False)
+        
+        if isinstance(source, unicode):
+            source = source.encode('utf-8')
+
+        export_file, err = wk.html_to_pdf(
+            source,
+            self.tempdir,
+            filename
+            url,
+            print_css,
+            [])
+
+        if err:
+            self.send_failed(self.order_data.order, "PDF creation failed.")
+            return False
+
+        export_file.close()
+        return export_file
+
+
+    def make_pdf(self):
+        context_url = self.context.absolute_url()
+
+        uid = self.order_data.order.attrs['uid']
+        link = "http://teylersmuseum-stage.intk.com/nl/tickets/etickets?order_id=%s" %(uid)
+
+        view_name, get_params = extract_from_url(link, context_url)
+
+        if get_params:
+            for key in get_params:
+                self.request.form[key] = get_params[key]
+        try:
+            view = self.context.restrictedTraverse(view_name)
+        except:
+            view = self.context
+
+        source = update_relative_url(view(), self.context)
+        if not source:
+            # XXX: need to send email
+            self.send_failed(self.order_data.order, "Page source failed to generated.")
+            return False
+    
+        pdf_file = self.generate_pdf_file(source)
+        return pdf_file
+
+
     def __init__(self, context, download_link=None, order_data=None):
         self.context = context
+        self.request = getRequest()
         self.settings = INotificationSettings(self.context)
         self.download_link = download_link
         self.order_data = order_data
+        self.tempdir = '/tmp/'
+        self.salt = 'salt_as_pdf'
 
     def download_file(self, url):
         cj = cookielib.CookieJar()
@@ -150,11 +232,12 @@ class MailNotify(object):
             pdfAttachment = None
 
             try:
-                link = self.download_link.replace("http://new.teylersmuseum.nl/", "http://new.teylersmuseum.nl:14082/NewTeylers/")
-                data = self.download_file(link)
+                pdf_file = self.make_pdf()
+                data = pdf_file
 
-                pdfAttachment = MIMEApplication(data, _subtype = "pdf")
-                pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
+                if data:
+                    pdfAttachment = MIMEApplication(data, _subtype = "pdf")
+                    pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
 
             except Exception, e:
                 error_msg = str(e)
@@ -166,7 +249,7 @@ class MailNotify(object):
                 msg.attach(text)
                 msg.attach(pdfAttachment)
             else:
-                failed_text = "<p><a href='http://new.teylersmuseum.nl/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(self.order_data.order.attrs['uid'])
+                failed_text = "<p><a href='http://www.teylersmuseum.nl/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(self.order_data.order.attrs['uid'])
                 message = message + failed_text
                 text.attach(MIMEText(message, 'html', 'utf-8'))
                 msg.attach(text)
@@ -196,7 +279,6 @@ class MailNotify(object):
                 body=msg.as_string()
             )
 
-            order = self.order_data
 
 
 
