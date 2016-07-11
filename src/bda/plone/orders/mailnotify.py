@@ -124,7 +124,7 @@ class MailNotify(object):
         export_file, err = wk.html_to_pdf(
             source,
             self.tempdir,
-            filename
+            filename,
             url,
             print_css,
             [])
@@ -278,11 +278,6 @@ class MailNotify(object):
                 subject=subject,
                 body=msg.as_string()
             )
-
-
-
-
-
 
 
 
