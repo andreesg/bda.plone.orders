@@ -231,17 +231,17 @@ class MailNotify(object):
             pdfAttachment = None
 
             try:
-                pdf_file = self.make_pdf()
-                if pdf_file:
-                    data = pdf_file.read()
-                    pdf_file.close()
+                if receiver != shop_manager_address:
+                    pdf_file = self.make_pdf()
+                    if pdf_file:
+                        data = pdf_file.read()
+                        pdf_file.close()
 
-                    if data:
-                        pdfAttachment = MIMEApplication(data, _subtype = "pdf")
-                        pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
+                        if data:
+                            pdfAttachment = MIMEApplication(data, _subtype = "pdf")
+                            pdfAttachment.add_header('content-disposition', 'attachment', filename='e-tickets.pdf')
 
             except Exception, e:
-                raise
                 error_msg = str(e)
                 self.send_failed(self.order_data.order, error_msg)
                 pass
