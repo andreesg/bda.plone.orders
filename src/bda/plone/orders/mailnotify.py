@@ -56,6 +56,8 @@ from collective.sendaspdf.utils import extract_from_url, update_relative_url, fi
 from collective.sendaspdf.transforms import wk
 from random import randint
 
+from bda.plone.shop.utils import is_ticket
+
 logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {
@@ -297,7 +299,7 @@ def create_mail_listing(context, order_data):
     """Create item listing for notification mail.
     """
 
-    tickets = '/tickets' in context.absolute_url()
+    tickets = is_ticket(context)
 
     lines = []
     for booking in order_data.bookings:
@@ -569,7 +571,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
     order_data
         Order-data instance.
     """
-    tickets = '/tickets' in context.absolute_url()
+    tickets = is_ticket(context)
 
     lang = context.restrictedTraverse('@@plone_portal_state').language()
     attrs = order_data.order.attrs
@@ -658,7 +660,7 @@ def create_mail_body(templates, context, order_data, download_link=None):
 def do_notify(context, order_data, templates, receiver, download_link=None):
     attrs = order_data.order.attrs
     
-    tickets = '/tickets' in context.absolute_url()
+    tickets = is_ticket(context)
 
     if download_link != None and tickets:
         subject = templates['ticket_subject']

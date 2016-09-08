@@ -47,6 +47,8 @@ import plone.api
 import urllib
 import uuid
 
+from bda.plone.shop.utils import is_ticket
+
 # Custom for tickets
 
 class Translate(object):
@@ -290,7 +292,7 @@ class OrdersView(OrdersViewBase):
         if not get_vendors_for():
             raise Unauthorized
 
-        if '/tickets' in self.context.absolute_url():
+        if is_ticket(self.context):
             self.table_view_name = '@@redeemtable'
             return super(OrdersView, self).__call__()
         else:

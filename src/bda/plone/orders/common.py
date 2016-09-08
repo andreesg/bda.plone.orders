@@ -52,6 +52,7 @@ import uuid
 
 # TM
 from plonetheme.museumbase.browser.tickets.behaviors import get_number_of_barcodes, get_barcode
+from bda.plone.shop.utils import is_ticket
 
 logger = logging.getLogger('bda.plone.checkout')
 NOT_ALLOWED = ['', ' ', None, '\n', '\r']
@@ -297,7 +298,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         # order UUID
         uid = order.attrs['uid'] = uuid.uuid4()
 
-        is_ticket_system = "/tickets" in self.context.absolute_url()
+        is_ticket_system = is_ticket(self.context)
 
         try:
             if order.attrs['email_sent'] == 'yes':
@@ -347,7 +348,9 @@ class OrderCheckoutAdapter(CheckoutAdapter):
                                              default=u'No Payment')
 
         ## CUSTOM TICKETS
-        if is_ticket_system:
+        print self.context
+        print self.context.Subject
+        if is_ticket_system or 'ticket' in self.context.Subject:
             order.attrs['shipping_method'] = 'no_shipping'
             order.attrs['shipping_label'] = _('no_shipping',
                                               default=u'No Shipping')
@@ -847,7 +850,7 @@ class PaymentData(object):
     @property
     def description(self):
 
-        is_ticket_system = "/tickets" in self.context.absolute_url()
+        is_ticket_system = is_ticket(self.context)
         
         order = self.order_data.order
         attrs = order.attrs
