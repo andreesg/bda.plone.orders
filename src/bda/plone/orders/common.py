@@ -348,9 +348,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
                                              default=u'No Payment')
 
         ## CUSTOM TICKETS
-        print self.context
-        print self.context.Subject
-        if is_ticket_system or 'ticket' in self.context.Subject:
+        if is_ticket_system:
             order.attrs['shipping_method'] = 'no_shipping'
             order.attrs['shipping_label'] = _('no_shipping',
                                               default=u'No Shipping')
