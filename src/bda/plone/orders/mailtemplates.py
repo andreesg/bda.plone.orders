@@ -23,6 +23,15 @@ ORDER_STOCK_LOW_SUBJECT_EN = "Product %s is getting out of stock."
 
 RESERVATION_SUBJECT_EN = u'Bevestiging van je bestelling %s'
 
+ORDER_EVENT_TICKET = """\
+<html>
+    <head></head>
+    <body>
+        %s    
+    </body>
+</html>
+"""
+
 ORDER_TICKET_EN = """\
 <html>
     <head></head>
@@ -545,13 +554,15 @@ ORDER_TEMPLATES = {
         'subject': ORDER_SUBJECT_NL,
         'body': ORDER_BODY_NL,
         'ticket': ORDER_TICKET_NL,
-        'delivery_address': DELIVERY_ADDRESS_EN},
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'event_ticket': ORDER_EVENT_TICKET},
     'en': {
         'ticket_subject': ORDER_TICKET_SUBJECT_EN,
         'subject': ORDER_SUBJECT_EN,
         'body': ORDER_BODY_EN,
         'ticket': ORDER_TICKET_EN,
-        'delivery_address': DELIVERY_ADDRESS_EN},
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'event_ticket': ORDER_EVENT_TICKET},
     'de': {
         'subject': ORDER_SUBJECT_DE,
         'body': ORDER_BODY_DE,
@@ -575,7 +586,8 @@ RESERVATION_TEMPLATES = {
         'subject': RESERVATION_SUBJECT_EN,
         'body': RESERVATION_BODY_EN,
         'delivery_address': DELIVERY_ADDRESS_EN,
-        'ticket': RESERVATION_BODY_EN},
+        'ticket': RESERVATION_BODY_EN,
+        'event_ticket': RESERVATION_BODY_EN},
     'de': {
         'subject': RESERVATION_SUBJECT_DE,
         'body': RESERVATION_BODY_DE,
@@ -598,7 +610,8 @@ CANCELLED_BOOKING_TEMPLATES = {
     'en': {
         'subject': CANCELLED_BOOKING_SUBJECT_EN,
         'body': CANCELLED_BOOKING_BODY_EN,
-        'ticket': CANCELLED_BOOKING_BODY_EN},
+        'ticket': CANCELLED_BOOKING_BODY_EN,
+        'event_ticket': CANCELLED_BOOKING_BODY_EN},
     'de': {
         'subject': CANCELLED_BOOKING_SUBJECT_DE,
         'body': CANCELLED_BOOKING_BODY_DE},

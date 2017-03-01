@@ -57,6 +57,7 @@ from collective.sendaspdf.transforms import wk
 from random import randint
 
 from bda.plone.shop.utils import is_ticket
+from plone.app.uuid.utils import uuidToObject, uuidToCatalogBrain
 
 logger = logging.getLogger('bda.plone.orders')
 
@@ -66,6 +67,10 @@ NOTIFICATIONS = {
     'booking_cancelled': [],
     'stock_threshold_reached': []
 }
+
+
+TEST_URL = "http://teylersmuseum-stage.intk.com"
+LIVE_URL = "https://www.teylersmuseum.nl"
 
 def dispatch_notify_checkout_success(event):
     for func in NOTIFICATIONS['checkout_success']:
@@ -120,8 +125,8 @@ class MailNotify(object):
 
         print_css = (False)
         
-        if isinstance(source, unicode):
-            source = source.encode('utf-8')
+        """if isinstance(source, unicode):
+            source = source.encode('utf-8')"""
 
         export_file, err = wk.html_to_pdf(
             source,
@@ -129,7 +134,7 @@ class MailNotify(object):
             filename,
             url,
             print_css,
-            [])
+            ['15', '--margin-top', '0', '--margin-bottom', '0', '--margin-left', '0', '--margin-right'])
 
         if err:
             self.send_failed(self.order_data.order, "PDF creation failed.")
@@ -142,9 +147,9 @@ class MailNotify(object):
         context_url = self.context.absolute_url()
 
         uid = self.order_data.order.attrs['uid']
-        link = "http://www.teylersmuseum.nl/nl/tickets/etickets?order_id=%s" %(uid)
+        link = "%s/nl/tickets/etickets?order_id=%s" %(TEST_URL, uid)
 
-        view_name, get_params = extract_from_url(link, context_url)
+        """view_name, get_params = extract_from_url(link, context_url)
 
         if get_params:
             for key in get_params:
@@ -154,7 +159,8 @@ class MailNotify(object):
         except:
             view = self.context
 
-        source = update_relative_url(view(), self.context)
+        source = update_relative_url(view(), self.context)"""
+        source = link
         if not source:
             # XXX: need to send email
             self.send_failed(self.order_data.order, "Page source failed to generated.")
@@ -253,7 +259,7 @@ class MailNotify(object):
                 msg.attach(text)
                 msg.attach(pdfAttachment)
             else:
-                failed_text = "<p><a href='http://www.teylersmuseum.nl/nl/download_as_pdf?page_url=http://www.teylersmuseum.nl/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(self.order_data.order.attrs['uid'])
+                failed_text = "<p><a href='%s/nl/download_as_pdf?page_url=%s/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(TEST_URL, TEST_URL, self.order_data.order.attrs['uid'])
                 message = message + failed_text
                 text.attach(MIMEText(message, 'html', 'utf-8'))
                 msg.attach(text)
@@ -641,7 +647,36 @@ def create_mail_body(templates, context, order_data, download_link=None):
             download_as_pdf_link = "%s/%s/download_as_pdf?page_url=%s/%s/tickets/etickets%s" %(base_url, language, base_url, language, params)
             download_link = download_as_pdf_link
 
-        body_template = templates['ticket']
+        
+        email_confirmation_text = ""
+        try:
+            b_uids = attrs['buyable_uids']
+        except:
+            b_uids = []
+
+        if b_uids:
+            try:
+                b_uid = b_uids[0]
+                b_obj = uuidToObject(b_uid)
+                b_parent = b_obj.aq_parent
+                if b_parent.portal_type == "Event":
+                    contents = b_parent.getFolderContents({"portal_type": "Document", "Title":"email-confirmation"})
+                    if len(contents) > 0:
+                        confirmation_email_brain = contents[0]
+                        confirmation_email_obj = confirmation_email_brain.getObject()
+                        if hasattr(confirmation_email_obj, "text"):
+                            email_confirmation_text = confirmation_email_obj.text.output
+                    else:
+                        email_confirmation_text = ""
+            except:
+                email_confirmation_text = ""
+
+        if email_confirmation_text:
+            email_temp = templates['event_ticket']
+            body_template = email_temp %(email_confirmation_text)
+        else:
+            body_template = templates['ticket']
+
         arguments["download_link"] = download_link
     else:
         body_template = templates['body']
