@@ -102,6 +102,7 @@ class BookingTransition(Transition):
             uid=uid,
             vendor_uids=vendor_uids
         )
+        
         do_transition_for(
             booking_data,
             transition=transition,
@@ -279,6 +280,7 @@ class BookingsTable(BrowserView):
         title = record.attrs.get('title', '')
         bookings_quantity = self.render_bookings_quantity(colname, record)
         bookings_total_sum = self.render_bookings_total_sum(colname, record)
+
         value = \
             u'<tr class="group_buyable">' \
             u'<td colspan="13">' + u'<p>' + safe_unicode(title) + u'</p>' +\
@@ -293,7 +295,7 @@ class BookingsTable(BrowserView):
                 _("bookings_total_sum", default=u"Bookings total sum"),
                 self.request
             ) \
-            + u': ' + bookings_total_sum + u'</td></tr>'
+            + u': ' + str(bookings_total_sum) + u'</td></tr>'
 
         return value
 

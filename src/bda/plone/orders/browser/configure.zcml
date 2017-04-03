@@ -40,6 +40,25 @@
     layer="..interfaces.IOrdersExtensionLayer" />
 
 
+  <!-- tours view -->
+  <browser:page
+    for="*"
+    name="tours"
+    template="tours_view.pt"
+    class=".views.ToursView"
+    permission="bda.plone.orders.ViewOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
+  <!-- tours table -->
+  <browser:page
+    for="*"
+    name="tourstable"
+    template="tours.pt"
+    class=".views.ToursTable"
+    permission="bda.plone.orders.ViewOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
+
   <!-- BOOKINGS -->
 
   <!-- bookings view -->
@@ -160,63 +179,63 @@
 
   <!-- order transitions for plone root -->
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="orderstatetransition"
     class=".views.OrderStateTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="ordersalariedtransition"
     class=".views.OrderSalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <!-- order transitions for vendor -->
-  <browser:page
-    for="bda.plone.orders.interfaces.IVendor"
+  <!--<browser:page
+    for="*"
     name="orderstatetransition"
     class=".views.OrderStateTransition"
     permission="bda.plone.orders.ModifyOrders"
-    layer="..interfaces.IOrdersExtensionLayer" />
+    layer="..interfaces.IOrdersExtensionLayer" />-->
 
-  <browser:page
-    for="bda.plone.orders.interfaces.IVendor"
+  <!--<browser:page
+    for="*"
     name="ordersalariedtransition"
     class=".views.OrderSalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
-    layer="..interfaces.IOrdersExtensionLayer" />
+    layer="..interfaces.IOrdersExtensionLayer" />-->
 
   <!-- booking transitions for plone root -->
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="bookingstatetransition"
     class=".bookings.BookingStateTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="bookingsalariedtransition"
     class=".bookings.BookingSalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <!-- booking transitions for vendor -->
-  <browser:page
-    for="bda.plone.orders.interfaces.IVendor"
+  <!--<browser:page
+    for="*"
     name="bookingstatetransition"
     class=".bookings.BookingStateTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <browser:page
-    for="bda.plone.orders.interfaces.IVendor"
+    for="*"
     name="bookingsalariedtransition"
     class=".bookings.BookingSalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
-    layer="..interfaces.IOrdersExtensionLayer" />
+    layer="..interfaces.IOrdersExtensionLayer" />-->
 
   <!-- export orders -->
   <browser:page
@@ -230,6 +249,14 @@
     for="*"
     name="exportorders_contextual"
     class=".export.ExportOrdersContextual"
+    permission="bda.plone.orders.ExportOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
+  <!-- export tours -->
+  <browser:page
+    for="*"
+    name="exporttours"
+    class=".export.ExportToursContextual"
     permission="bda.plone.orders.ExportOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 

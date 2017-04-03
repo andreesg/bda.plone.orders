@@ -17,7 +17,7 @@ from bda.plone.orders.common import BookingData
 from bda.plone.orders.common import DT_FORMAT
 from bda.plone.orders.common import OrderData
 from bda.plone.orders.common import booking_update_comment
-from bda.plone.orders.common import get_orders_soup
+from bda.plone.orders.common import get_orders_soup, get_bookings_soup
 from bda.plone.orders.common import get_vendor_by_uid
 from bda.plone.orders.common import get_vendor_uids_for
 from bda.plone.orders.common import get_vendors_for
@@ -44,12 +44,80 @@ import pkg_resources
 import plone.api
 import urllib
 import uuid
-
+import datetime
+from bda.plone.orders.common import get_order
+from plone.app.event.base import get_events, construct_calendar
+from plone.event.interfaces import IOccurrence
+from Acquisition import aq_parent
+from bda.plone.ticketshop.interfaces import IBuyableEvent
+from plone.app.event.base import RET_MODE_OBJECTS
+from bda.plone.ticketshop.interfaces import ITicketOccurrenceData
+from Products.CMFPlone.utils import safe_unicode
 
 IS_P4 = pkg_resources.require("Products.CMFPlone")[0].version[0] == '4'
 
 
+def _get_ordervalue(context, colname, record):
+        """
+        helper method to get the values which are saved on the order and not
+        on the booking itself.
+        """
+        order = get_order(context, record.attrs.get('order_uid'))
+        value = order.attrs.get(colname, '')
+        return value
+
+def get_tours_events(context):
+    bookings_soup = get_bookings_soup(context)
+    start = datetime.datetime.today()
+    events = get_events(context, 
+                        start=start, 
+                        sort='start', 
+                        sort_reverse=False, 
+                        ret_mode=RET_MODE_OBJECTS, 
+                        expand=True)
+
+    buyables = []
+    for occ in events:
+        if IOccurrence.providedBy(occ):
+            occurrence_id = occ.id
+            event = aq_parent(occ)
+            occ_data = ITicketOccurrenceData(event)
+            occs = occ_data.ticket_occurrences(occurrence_id)
+            if occs:
+                occurrence_ticket = occs[0]
+                occurrence_uid = occurrence_ticket.UID()
+                buyable = bookings_soup.query(Eq('buyable_uid', occurrence_uid))
+                buyable_list = list(buyable)
+                
+                if buyable_list:
+                    for elem in buyable_list:
+                        buyable_record = elem
+                        if "Lorentz Lab" in buyable_record.attrs['title']:
+                            new_entry = {
+                                "tour": buyable_record.attrs['title'],
+                                "date": "%s, %s - %s" %(buyable_record.attrs['eventstart'].strftime("%d %B %Y"), buyable_record.attrs['eventstart'].strftime("%H:%M"), buyable_record.attrs['eventend'].strftime("%H:%M")),
+                                "first-name":safe_unicode(_get_ordervalue(context, 'personal_data.firstname', buyable_record)),
+                                "last-name":safe_unicode(_get_ordervalue(context, 'personal_data.lastname', buyable_record)),
+                                "email":buyable_record.attrs['email'],
+                                "quantity":buyable_record.attrs['buyable_count']
+                            }
+                            buyables.append(new_entry)
+    return buyables
+
+
 class OrdersContentView(BrowserView):
+
+    def disable_border(self):
+        if IS_P4:
+            self.request.set('disable_border', True)
+
+    def disable_left_column(self):
+        self.request.set('disable_plone.leftcolumn', True)
+
+    def disable_right_column(self):
+        self.request.set('disable_plone.rightcolumn', True)
+
+class ToursContentView(BrowserView):
 
     def disable_border(self):
         if IS_P4:
@@ -280,6 +348,81 @@ class OrdersView(OrdersViewBase):
         return super(OrdersView, self).__call__()
 
 
+## TOURS
+class ToursViewBase(ToursContentView):
+    table_view_name = '@@tourstable'
+
+    def tours_table(self):
+        return self.context.restrictedTraverse(self.table_view_name)()
+
+
+class ToursView(ToursViewBase):
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        return super(ToursView, self).__call__()
+
+class ToursTableBase(BrowserView):
+    table_template = ViewPageTemplateFile('tours_table.pt')
+    table_id = 'bdaplonetours'
+
+    def rendered_table(self):
+        return self.table_template(self)
+    
+    def _get_ordervalue(self, colname, record):
+        """
+        helper method to get the values which are saved on the order and not
+        on the booking itself.
+        """
+        order = get_order(self.context, record.attrs.get('order_uid'))
+        value = order.attrs.get(colname, '')
+        return value
+
+    @property
+    def get_columns(self):
+        return [{
+                'id': 'tour-name',
+                'label': 'Tour'
+            },{
+                'id': 'tour-date',
+                'label': _('date', default=u'Date'),
+            }, {
+                'id': 'personal_data.lastname',
+                'label': _('lastname', default=u'Last Name'),
+            }, {
+                'id': 'personal_data.firstname',
+                'label': _('firstname', default=u'First Name'),
+            }, {
+                'id': 'personal_data.email',
+                'label': _('email', default=u'Email'),
+            },{
+                'id': 'quantity',
+                'label': _('quantity', default=u'Aantal'),
+            }
+            ]
+
+    @property
+    def get_tours(self):
+        buyables = get_tours_events(self.context)
+        return buyables
+
+
+class ToursTable(ToursTableBase):
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        # disable diazo theming if ajax call
+        if '_' in self.request.form:
+            self.request.response.setHeader('X-Theme-Disabled', 'True')
+        return super(ToursTable, self).__call__()
+
+## TOURS
+
+
 class MyOrdersView(OrdersViewBase):
     table_view_name = '@@myorderstable'
 
@@ -358,6 +501,19 @@ class OrdersTableBase(BrowserView):
             'label': _('state', default=u'State'),
             'renderer': self.render_state,
         }]
+
+
+class OrdersTable(OrdersTableBase):
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        # disable diazo theming if ajax call
+        if '_' in self.request.form:
+            self.request.response.setHeader('X-Theme-Disabled', 'True')
+        return super(OrdersTable, self).__call__()
+
 
 
 def vendors_form_vocab():

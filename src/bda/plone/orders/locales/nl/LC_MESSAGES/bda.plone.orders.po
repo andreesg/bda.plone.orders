@@ -517,7 +517,7 @@ msgstr "E-mail:"
 #. Default: "Gender:"
 #: ./browser/order.pt:25
 msgid "order_gender"
-msgstr "Geslacht:"
+msgstr "Aanhef:"
 
 #. Default: "Name:"
 #: ./browser/order.pt:28

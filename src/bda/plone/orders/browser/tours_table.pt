@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+    i18n:domain="bda.plone.orders"
+    tal:omit-tag="">
+
+  <style>
+    body.template-tours #slickcarousel:before {
+      padding-top: 20%;
+    }
+
+  </style>
+
+  <div id="tours-header">
+    <a href="@@exporttours" class="btn btn-default" type="button">Export</a>
+  </div>
+
+  <table tal:define="columns view/get_columns;
+                     rows view/get_tours"
+         tal:attributes="id view/table_id">
+    <thead>
+      <tr>
+        <tal:loop repeat="colinfo columns">
+          <th tal:attributes="class python: 'datarow-' + colinfo['id'];">
+            <tal:additional
+              condition="nocall:colinfo/head|nothing"
+              replace="structure colinfo/head" />
+            <span tal:replace="python: colinfo['label']">Title</span>
+          </th>
+        </tal:loop>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tal:loop repeat="rowinfo rows">
+        <tr>
+          <td tal:content="python: rowinfo['tour']"></td>
+          <td tal:content="python: rowinfo['date']"></td>
+          <td tal:content="python: rowinfo['last-name']"></td>
+          <td tal:content="python: rowinfo['first-name']"></td>
+          <td tal:content="python: rowinfo['email']"></td>
+          <td tal:content="python: rowinfo['quantity']"></td>
+        </tr>
+      </tal:loop>
+    </tbody>
+  </table>
+</html>

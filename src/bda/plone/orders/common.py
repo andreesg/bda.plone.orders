@@ -41,12 +41,16 @@ from souper.soup import get_soup
 from zope.component import queryAdapter
 from zope.event import notify
 from zope.interface import implementer
+
+import transaction
 import datetime
 import logging
 import plone.api
 import time
 import uuid
 
+""" CUSTOM TICKETS """
+from bda.plone.cart import is_ticket
 
 logger = logging.getLogger('bda.plone.checkout')
 
@@ -137,7 +141,10 @@ def get_vendors_for(user=None):
         user = plone.api.user.get_current()
 
     def permitted(obj):
-        return user.checkPermission(permissions.ModifyOrders, obj)
+        try:
+            return user.checkPermission(permissions.ModifyOrders, obj)
+        except:
+            return False
     return [vendor for vendor in get_all_vendors() if permitted(vendor)]
 
 
@@ -199,10 +206,27 @@ class BookingsCatalogFactory(object):
         catalog[u'state'] = CatalogFieldIndex(state_indexer)
         salaried_indexer = NodeAttributeIndexer('salaried')
         catalog[u'salaried'] = CatalogFieldIndex(salaried_indexer)
+        
+
+
+        """ Tickets redeem """
+        redeemed_indexer = NodeAttributeIndexer('redeemed')
+        catalog[u'redeemed'] = CatalogFieldIndex(redeemed_indexer)
+
+        to_redeem_indexer = NodeAttributeIndexer('to_redeem')
+        catalog[u'to_redeem'] = CatalogFieldIndex(to_redeem_indexer)
+
         search_attributes = [
+            'uid',
+            'redeemed',
+            'title',
+            'to_redeem',
+            'personal_data.firstname',
+            'personal_data.lastname',
             'email',
             'title'
         ]
+
         text_indexer = NodeTextIndexer(search_attributes)
         catalog[u'text'] = CatalogTextIndex(text_indexer)
         return catalog
@@ -252,7 +276,13 @@ class OrdersCatalogFactory(object):
         # salaried on order only used for sorting in orders table
         salaried_indexer = NodeAttributeIndexer('salaried')
         catalog[u'salaried'] = CatalogFieldIndex(salaried_indexer)
+
+        """ CUSTOM """
+        email_indexer = NodeAttributeIndexer('email_sent')
+        catalog[u'email_sent'] = CatalogFieldIndex(email_indexer)
+
         return catalog
+
 
 
 class OrderCheckoutAdapter(CheckoutAdapter):
@@ -279,6 +309,18 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         order = self.order
         # order UUID
         uid = order.attrs['uid'] = uuid.uuid4()
+
+        is_ticket_system = is_ticket(self.context)
+
+        try:
+            if order.attrs['email_sent'] == 'yes':
+                order.attrs['email_sent'] = 'yes'
+            else:
+                order.attrs['email_sent'] = False
+        except:
+            order.attrs['email_sent'] = False
+
+
         # order creator
         creator = None
         member = plone.api.user.get_current()
@@ -306,24 +348,33 @@ class OrderCheckoutAdapter(CheckoutAdapter):
                                              default=u'No Payment')
         # shipping related information
         if cart_data.include_shipping_costs:
-            shipping_param = 'checkout.shipping_selection.shipping'
-            sid = data.fetch(shipping_param).extracted
-            shipping = Shippings(self.context).get(sid)
-            order.attrs['shipping_method'] = sid
-            order.attrs['shipping_label'] = shipping.label
-            order.attrs['shipping_description'] = shipping.description
             try:
-                shipping_net = shipping.net(self.items)
-                shipping_vat = shipping.vat(self.items)
-                order.attrs['shipping_net'] = shipping_net
-                order.attrs['shipping_vat'] = shipping_vat
-                order.attrs['shipping'] = shipping_net + shipping_vat
-            # B/C for bda.plone.shipping < 0.4
-            except NotImplementedError:
-                shipping_net = shipping.calculate(self.items)
-                order.attrs['shipping_net'] = shipping_net
+                shipping_param = 'checkout.shipping_selection.shipping'
+                sid = data.fetch(shipping_param).extracted
+                shipping = Shippings(self.context).get(sid)
+                order.attrs['shipping_method'] = sid
+                order.attrs['shipping_label'] = shipping.label
+                order.attrs['shipping_description'] = shipping.description
+                try:
+                    shipping_net = shipping.net(self.items)
+                    shipping_vat = shipping.vat(self.items)
+                    order.attrs['shipping_net'] = shipping_net
+                    order.attrs['shipping_vat'] = shipping_vat
+                    order.attrs['shipping'] = shipping_net + shipping_vat
+                # B/C for bda.plone.shipping < 0.4
+                except NotImplementedError:
+                    shipping_net = shipping.calculate(self.items)
+                    order.attrs['shipping_net'] = shipping_net
+                    order.attrs['shipping_vat'] = Decimal(0)
+                    order.attrs['shipping'] = shipping_net
+            except:
+                order.attrs['shipping_method'] = 'no_shipping'
+                order.attrs['shipping_label'] = _('no_shipping',
+                                                  default=u'No Shipping')
+                order.attrs['shipping_description'] = ''
+                order.attrs['shipping_net'] = Decimal(0)
                 order.attrs['shipping_vat'] = Decimal(0)
-                order.attrs['shipping'] = shipping_net
+                order.attrs['shipping'] = Decimal(0)
         # no shipping
         else:
             order.attrs['shipping_method'] = 'no_shipping'
@@ -372,6 +423,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
                 self.context,
                 booking.attrs['buyable_uid']
             )
+            
             item_stock = get_item_stock(buyable)
             # no stock applied
             if item_stock is None:
@@ -405,6 +457,11 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         return ret
 
     def create_booking(self, order, cart_data, uid, count, comment):
+        from bda.plone.molliepayment.mollie_payment.tickets.behaviors import get_number_of_barcodes
+        from bda.plone.molliepayment.mollie_payment.tickets.behaviors import get_barcode
+        from bda.plone.molliepayment.mollie_payment.tickets.behaviors import NOT_ALLOWED
+
+
         brain = get_catalog_brain(self.context, uid)
         # brain could be None if uid for item in cookie which no longer exists.
         if not brain:
@@ -416,20 +473,54 @@ class OrderCheckoutAdapter(CheckoutAdapter):
             logger.warning(msg)
             raise CheckoutError(msg)
         item_stock = get_item_stock(buyable)
-        # stock not applied, state new
+
+        # Barcodes
+        use_barcodes = getattr(buyable, 'use_barcodes', None)
+
+        # Create new booking
+        booking = OOBTNode()
+        booking.attrs['uid'] = uuid.uuid4()
+
+        # Create redeemed
+        booking.attrs['redeemed'] = []
+        if use_barcodes:
+            to_redeem = []
+            for i in range(count):
+                barcode = get_barcode(buyable)
+                if barcode in NOT_ALLOWED:
+                    msg = u'Item has an invalid barcode available {0}'.format(buyable.id)
+                    logger.warning(msg)
+                    raise CheckoutError(msg)
+                else:
+                    to_redeem.append(barcode)
+            if len(to_redeem) != count:
+                msg = u'Not enough barcodes generated for {0}'.format(buyable.id)
+                logger.warning(msg)
+                raise CheckoutError(msg)
+        else:
+            to_redeem = ["%s-%03d" %(str(booking.attrs['uid']), (i+1)) for i in range(count)]
+
+        booking.attrs['to_redeem'] = to_redeem
+
         if item_stock is None:
             available = None
             state = ifaces.STATE_NEW
-        # calculate state from stock
         else:
             if item_stock.available is not None:
-                item_stock.available -= float(count)
+                # Check barcodes
+                if use_barcodes and brain.portal_type != "Ticket Occurrence":
+                    new_stock = get_number_of_barcodes(buyable, buyable.barcode_list, True)
+                    item_stock.available = new_stock
+                else:
+                    item_stock.available -= float(count)
+
             available = item_stock.available
             state = ifaces.STATE_NEW if available is None or available >= 0.0\
                 else ifaces.STATE_RESERVED
+
         item_data = get_item_data_provider(buyable)
         vendor = acquire_vendor_or_shop_root(buyable)
-        booking = OOBTNode()
+
         booking.attrs['email'] = order.attrs['personal_data.email']
         booking.attrs['uid'] = uuid.uuid4()
         booking.attrs['buyable_uid'] = uid
@@ -834,6 +925,8 @@ class BookingData(OrderState):
         self.reindex_bookings([booking])
         self.reindex_order(order.order)
 
+        transaction.get().commit()
+
     @property
     def salaried(self):
         return self.booking.attrs['salaried']
@@ -903,11 +996,12 @@ class PaymentData(object):
         attrs = order.attrs
         amount = '%s %s' % (self.currency,
                             str(round(self.order_data.total, 2)))
+        
         description = ', '.join([
             attrs['created'].strftime(DT_FORMAT),
             attrs['personal_data.firstname'],
             attrs['personal_data.lastname'],
-            attrs['billing_address.city'],
+            attrs.get('billing_address.city', ''),
             safe_encode(amount)])
         return description
 

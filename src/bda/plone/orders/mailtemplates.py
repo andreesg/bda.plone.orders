@@ -12,7 +12,9 @@ from zope.interface import implementer
 # en
 ###############################################################################
 
+ORDER_SUBJECT_NL = u'Bevestiging van je bestelling %s'
 ORDER_SUBJECT_EN = u'Order %s received.'
+
 
 ORDER_BODY_EN = u"""
 Date: %(date)s
@@ -24,18 +26,7 @@ Order details: %(portal_url)s/@@showorder?ordernumber=%(ordernumber)s
 
 Personal Data:
 Name: %(personal_data.firstname)s %(personal_data.lastname)s
-Company: %(personal_data.company)s
-Phone: %(personal_data.phone)s
 Email: %(personal_data.email)s
-
-Address:
-Street: %(billing_address.street)s
-ZIP: %(billing_address.zip)s
-City: %(billing_address.city)s
-Country: %(billing_address.country)s
-%(delivery_address)s
-Comment:
-%(order_comment.comment)s
 
 Ordered items:
 %(item_listing)s
@@ -43,6 +34,30 @@ Ordered items:
 %(order_summary)s%(global_text)s%(payment_text)s
 """
 
+ORDER_TICKET_NL = """\
+<html>
+    <head></head>
+    <body>
+        <p>Hartelijk bedankt voor je bestelling. De tickets vind je in de bijlage. Deze zijn geldig tot één jaar na de aankoopdatum. Graag tot ziens in het museum!</p>
+        <p>Heb je vragen over je bestelling, neem dan contact op met info@teylersmuseum.nl.</p>
+        <p>Bekijk de website van Teylers Museum voor een actueel overzicht van tentoonstellingn en activiteiten: <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
+    </body>
+</html>
+"""
+
+ORDER_TICKET_EN = """\
+<html>
+    <head></head>
+    <body>
+        <p>Thank you very much for your order. We look forward welcoming you. Please find your tickets attached in this e-mail.</p>
+        <p>For questions on your order you can contact info@teylersmuseum.nl.</p>
+        <p>The website of the Teylers Museum contains an immense amount of background and topical information. If you would like to prepare your visit in advance, have a look at <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> or join us on social media.</p>
+    </body>
+</html>
+"""
+
+ORDER_TICKET_SUBJECT_NL = u"Teylers Museum E-tickets"
+ORDER_TICKET_SUBJECT_EN = u"Teylers Museum E-tickets"
 
 RESERVATION_SUBJECT_EN = u'Reservation %s received.'
 
@@ -516,7 +531,15 @@ ORDER_TEMPLATES = {
     'en': {
         'subject': ORDER_SUBJECT_EN,
         'body': ORDER_BODY_EN,
-        'delivery_address': DELIVERY_ADDRESS_EN},
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'ticket': ORDER_TICKET_EN,
+        'ticket_subject': ORDER_TICKET_SUBJECT_EN},
+    'nl': {
+        'subject': ORDER_SUBJECT_NL,
+        'body': ORDER_BODY_EN,
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'ticket': ORDER_TICKET_NL,
+        'ticket_subject': ORDER_TICKET_SUBJECT_NL},
     'de': {
         'subject': ORDER_SUBJECT_DE,
         'body': ORDER_BODY_DE,
@@ -539,7 +562,8 @@ RESERVATION_TEMPLATES = {
     'en': {
         'subject': RESERVATION_SUBJECT_EN,
         'body': RESERVATION_BODY_EN,
-        'delivery_address': DELIVERY_ADDRESS_EN},
+        'delivery_address': DELIVERY_ADDRESS_EN,
+        'ticket': RESERVATION_BODY_EN},
     'de': {
         'subject': RESERVATION_SUBJECT_DE,
         'body': RESERVATION_BODY_DE,
@@ -561,7 +585,8 @@ RESERVATION_TEMPLATES = {
 CANCELLED_BOOKING_TEMPLATES = {
     'en': {
         'subject': CANCELLED_BOOKING_SUBJECT_EN,
-        'body': CANCELLED_BOOKING_BODY_EN},
+        'body': CANCELLED_BOOKING_BODY_EN,
+        'ticket': CANCELLED_BOOKING_BODY_EN},
     'de': {
         'subject': CANCELLED_BOOKING_SUBJECT_DE,
         'body': CANCELLED_BOOKING_BODY_DE},
@@ -579,10 +604,12 @@ CANCELLED_BOOKING_TEMPLATES = {
 BOOKING_RESERVED_TO_ORDERED_TEMPLATES = {
     'en': {
         'subject': BOOKING_RESERVED_TO_ORDERED_SUBJECT_EN,
-        'body': BOOKING_RESERVED_TO_ORDERED_BODY_EN},
+        'body': BOOKING_RESERVED_TO_ORDERED_BODY_EN,
+        'ticket': BOOKING_RESERVED_TO_ORDERED_BODY_EN},
     'de': {
         'subject': BOOKING_RESERVED_TO_ORDERED_SUBJECT_DE,
-        'body': BOOKING_RESERVED_TO_ORDERED_BODY_DE}
+        'body': BOOKING_RESERVED_TO_ORDERED_BODY_DE,
+        'ticket': BOOKING_RESERVED_TO_ORDERED_BODY_DE}
 }
 
 STOCK_THRESHOLD_REACHED_TEMPLATES = {

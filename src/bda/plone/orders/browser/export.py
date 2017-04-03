@@ -39,6 +39,7 @@ import plone.api
 import uuid
 import yafowil.loader  # noqa
 
+from bda.plone.orders.browser.views import get_tours_events
 
 class DialectExcelWithColons(csv.excel):
     delimiter = ';'
@@ -256,6 +257,69 @@ class ExportOrdersForm(YAMLForm, OrdersContentView):
         self.request.response.setHeader('Content-Type', 'text/csv')
         self.request.response.setHeader('Content-Disposition',
                                         'attachment; filename=%s' % filename)
+        ret = sio.getvalue()
+        sio.close()
+        return ret
+
+
+## TOURS
+
+class ExportToursContextual(BrowserView):
+
+    def __call__(self):
+        user = plone.api.user.get_current()
+        # check if authenticated user is vendor
+        if not user.checkPermission(permissions.ModifyOrders, self.context):
+            raise Unauthorized
+
+        # Special case for constructed objects like IEventOccurrence from
+        # plone.app.event
+        title = 'Tours' or aq_parent(self.context).title
+
+        filename = u'{0}_{1}.csv'.format(
+            safe_unicode(title),
+            safe_unicode(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+        )
+        filename = safe_filename(filename)
+        resp = self.request.response
+        resp.setHeader('content-type', 'text/csv; charset=utf-8')
+        resp.setHeader(
+            'content-disposition',
+            'attachment;filename={}'.format(filename)
+        )
+        return self.get_csv()
+
+    def export_val(self, record, attr_name):
+        """Get attribute from record and cleanup.
+        Since the record object is available, you can return aggregated values.
+        """
+        val = record.attrs.get(attr_name)
+        return cleanup_for_csv(val)
+
+    def get_csv(self):
+        TOUR_EXPORT_ATTRS = [
+            ('tour', 'Tour'),
+            ('date', 'Datum'),
+            ('last-name', 'Achternaam'),
+            ('first-name', 'Voornaam'),
+            ('email', 'Email'),
+            ('quantity', 'Aantal')
+        ]
+
+        context = self.context
+
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow([attr[1] for attr in TOUR_EXPORT_ATTRS])
+
+        bookings = get_tours_events(self.context)
+
+        for booking in bookings:
+            row = [cleanup_for_csv(booking.get(attr[0], '')) for attr in TOUR_EXPORT_ATTRS]
+            ex.writerow(row)
+
         ret = sio.getvalue()
         sio.close()
         return ret

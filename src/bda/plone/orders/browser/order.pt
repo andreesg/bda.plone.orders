@@ -23,33 +23,33 @@
     <div class="personal_data">
       <h3 i18n:translate="personal_data">Personal Data:</h3>
       <strong i18n:translate="order_gender">Gender:</strong>
-      <span tal:replace="view/gender">gender</span>
+      <span tal:replace="view/gender|nothing">gender</span>
       <br />
       <strong i18n:translate="order_name">Name:</strong>
-      <span tal:replace="order/personal_data.firstname">first name</span>
-      <span tal:replace="order/personal_data.lastname">last name</span>
+      <span tal:replace="order/personal_data.firstname|nothing">first name</span>
+      <span tal:replace="order/personal_data.lastname|nothing">last name</span>
       <br />
       <strong i18n:translate="order_email">Email:</strong>
-      <span tal:replace="order/personal_data.email">email</span>
+      <span tal:replace="order/personal_data.email|nothing">email</span>
       <br />
       <strong i18n:translate="order_company">Company:</strong>
-      <span tal:replace="order/personal_data.company">company</span>
+      <span tal:replace="order/personal_data.company|nothing">company</span>
       <br />
       <strong i18n:translate="order_phone">Phone:</strong>
-      <span tal:replace="order/personal_data.phone">phone</span>
+      <span tal:replace="order/personal_data.phone|nothing">phone</span>
     </div>
 
     <div class="billing_address">
       <h3 i18n:translate="billing_address">Billing Address:</h3>
       <strong i18n:translate="order_street">Street:</strong>
-      <span tal:replace="order/billing_address.street">street</span>
+      <span tal:replace="order/billing_address.street|nothing">street</span>
       <br />
       <strong i18n:translate="order_zip_city">ZIP/City:</strong>
-      <span tal:replace="order/billing_address.zip">zip</span>
-      <span tal:replace="order/billing_address.city">city</span>
+      <span tal:replace="order/billing_address.zip|nothing">zip</span>
+      <span tal:replace="order/billing_address.city|nothing">city</span>
       <br />
       <strong i18n:translate="order_country">Country:</strong>
-      <span tal:replace="python:view.country(order['billing_address.country'])">
+      <span tal:replace="python:view.country(order.get('billing_address.country', ''))">
         country
       </span>
     </div>
@@ -59,25 +59,25 @@
     <div class="order_state">
       <h3 i18n:translate="order_state_heading">Order State:</h3>
       <strong i18n:translate="order_created">Created:</strong>
-      <span tal:replace="view/created">created</span>
+      <span tal:replace="view/created|nothing">created</span>
       <br />
       <strong i18n:translate="order_payment">Payment:</strong>
-      <span tal:replace="view/payment">payment</span>
+      <span tal:replace="view/payment|nothing">payment</span>
       <br />
       <strong i18n:translate="order_salaried">Salaried:</strong>
-      <span tal:replace="view/salaried">No</span>
+      <span tal:replace="view/salaried|nothing">No</span>
       <br />
       <strong i18n:translate="transaction_id">Transaction ID:</strong>
-      <span tal:replace="view/tid">none</span>
+      <span tal:replace="view/tid|nothing">none</span>
       <br />
       <strong i18n:translate="order_state">State:</strong>
-      <span tal:replace="view/state">state</span>
+      <span tal:replace="view/state|nothing">state</span>
     </div>
 
     <div class="order_summary">
       <h3 i18n:translate="order_summary">Order Summary:</h3>
       <strong i18n:translate="currency">Currency:</strong>
-      <tal:currency define="currency view/currency">
+      <tal:currency define="currency view/currency|nothing">
         <tal:consistent condition="currency">
           <span tal:content="currency">EUR</span>
         </tal:consistent>
@@ -90,57 +90,57 @@
       </tal:currency>
       <br />
       <strong i18n:translate="order_net">Net:</strong>
-      <span tal:replace="view/net">0.00</span>
+      <span tal:replace="view/net|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_vat">VAT:</strong>
-      <span tal:replace="view/vat">0.00</span>
+      <span tal:replace="view/vat|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_discount_net">Discount Net:</strong>
-      <span tal:replace="view/discount_net">0.00</span>
+      <span tal:replace="view/discount_net|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_discount_vat">Discount VAT:</strong>
-      <span tal:replace="view/discount_vat">0.00</span>
+      <span tal:replace="view/discount_vat|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_shipping_title">Shipping:</strong>
-      <span tal:replace="view/shipping_title">0.00</span>
+      <span tal:replace="view/shipping_title|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_shipping_costs_net">Shipping Net:</strong>
-      <span tal:replace="view/shipping_net">0.00</span>
+      <span tal:replace="view/shipping_net|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_shipping_costs_vat">Shipping VAT:</strong>
-      <span tal:replace="view/shipping_vat">0.00</span>
+      <span tal:replace="view/shipping_vat|nothing">0.00</span>
       <br />
       <strong i18n:translate="order_total">Total:</strong>
-      <strong tal:content="view/total">0.00</strong>
+      <strong tal:content="view/total|nothing">0.00</strong>
     </div>
   </div>
 
   <div class="order_details_row">
     <div class="delivery_address"
-         tal:condition="order/delivery_address.alternative_delivery">
+         tal:condition="order/delivery_address.alternative_delivery|nothing">
       <h3 i18n:translate="delivery_address">Delivery Address:</h3>
       <strong i18n:translate="order_name">Name:</strong>
-      <span tal:replace="order/delivery_address.firstname">first name</span>
-      <span tal:replace="order/delivery_address.lastname">last name</span>
+      <span tal:replace="order/delivery_address.firstname|nothing">first name</span>
+      <span tal:replace="order/delivery_address.lastname|nothing">last name</span>
       <br />
       <strong i18n:translate="order_company">Company:</strong>
-      <span tal:replace="order/delivery_address.company">company</span>
+      <span tal:replace="order/delivery_address.company|nothing">company</span>
       <br />
       <strong i18n:translate="order_street">Street:</strong>
-      <span tal:replace="order/delivery_address.street">street</span>
+      <span tal:replace="order/delivery_address.street|nothing">street</span>
       <br />
       <strong i18n:translate="order_zip_city">ZIP/City:</strong>
-      <span tal:replace="order/delivery_address.zip">zip</span>
-      <span tal:replace="order/delivery_address.city">city</span>
+      <span tal:replace="order/delivery_address.zip|nothing">zip</span>
+      <span tal:replace="order/delivery_address.city|nothing">city</span>
       <br />
       <strong i18n:translate="order_country">Country:</strong>
-      <span tal:replace="python:view.country(order['delivery_address.country'])">
+      <span tal:replace="python:view.country(order.get('delivery_address.country', ''))">
         country
       </span>
     </div>
 
     <div class="delivery_address"
-         tal:condition="not:order/delivery_address.alternative_delivery">
+         tal:condition="not:order/delivery_address.alternative_delivery|nothing">
       <h3 i18n:translate="delivery_address">Delivery Address:</h3>
       <p i18n:translate="order_no_delivery_address">
         No delivery Address defined
@@ -149,9 +149,9 @@
 
     <div class="order_comment">
       <h3 i18n:translate="order_comment">Order Comment:</h3>
-      <p tal:content="order/order_comment.comment"
-         tal:condition="order/order_comment.comment">comment</p>
-      <p tal:condition="not:order/order_comment.comment"
+      <p tal:content="order/order_comment.comment|nothing"
+         tal:condition="order/order_comment.comment|nothing">comment</p>
+      <p tal:condition="not:order/order_comment.comment|nothing"
          i18n:translate="order_no_comment">
         No Comment
       </p>
