@@ -4,6 +4,12 @@
     i18n:domain="bda.plone.orders"
     tal:omit-tag="">
 
+
+  <div id="tours-header">
+    <a href="@@exporttours" class="btn btn-default" type="button">Export</a>
+  </div>
+
+
   <div class="filter clearfix"
        tal:attributes="ajax:target context/absolute_url">
     <tal:filter replace="structure view/render_filter"/>

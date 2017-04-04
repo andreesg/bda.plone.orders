@@ -53,7 +53,10 @@ from bda.plone.ticketshop.interfaces import IBuyableEvent
 from plone.app.event.base import RET_MODE_OBJECTS
 from bda.plone.ticketshop.interfaces import ITicketOccurrenceData
 from Products.CMFPlone.utils import safe_unicode
+from Products.CMFPlone.i18nl10n import ulocalized_time
+from plone.app.event.base import DT
 
+import plone.api
 IS_P4 = pkg_resources.require("Products.CMFPlone")[0].version[0] == '4'
 
 
@@ -93,9 +96,10 @@ def get_tours_events(context):
                     for elem in buyable_list:
                         buyable_record = elem
                         if "Lorentz Lab" in buyable_record.attrs['title']:
+                            startdate = ulocalized_time(DT(buyable_record.attrs['eventstart']), long_format=False, context=context)
                             new_entry = {
                                 "tour": buyable_record.attrs['title'],
-                                "date": "%s, %s - %s" %(buyable_record.attrs['eventstart'].strftime("%d %B %Y"), buyable_record.attrs['eventstart'].strftime("%H:%M"), buyable_record.attrs['eventend'].strftime("%H:%M")),
+                                "date": "%s, %s - %s" %(startdate, buyable_record.attrs['eventstart'].strftime("%H:%M"), buyable_record.attrs['eventend'].strftime("%H:%M")),
                                 "first-name":safe_unicode(_get_ordervalue(context, 'personal_data.firstname', buyable_record)),
                                 "last-name":safe_unicode(_get_ordervalue(context, 'personal_data.lastname', buyable_record)),
                                 "email":buyable_record.attrs['email'],
@@ -338,6 +342,11 @@ class OrdersViewBase(OrdersContentView):
     def orders_table(self):
         return self.context.restrictedTraverse(self.table_view_name)()
 
+class OrdersToursViewBase(OrdersContentView):
+    table_view_name = '@@orderstourstable'
+
+    def orders_table(self):
+        return self.context.restrictedTraverse(self.table_view_name)()
 
 class OrdersView(OrdersViewBase):
 
@@ -346,6 +355,14 @@ class OrdersView(OrdersViewBase):
         if not get_vendors_for():
             raise Unauthorized
         return super(OrdersView, self).__call__()
+
+class OrdersToursView(OrdersToursViewBase):
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        return super(OrdersToursView, self).__call__()
 
 
 ## TOURS
@@ -502,6 +519,114 @@ class OrdersTableBase(BrowserView):
             'renderer': self.render_state,
         }]
 
+class OrdersToursTableBase(BrowserView):
+    table_template = ViewPageTemplateFile('table.pt')
+    table_id = 'bdaploneorders'
+    data_view_name = '@@orderstoursdata'
+
+
+    def rendered_table(self):
+        return self.table_template(self)
+
+    def render_filter(self):
+        return None
+
+    def render_order_actions_head(self):
+        return None
+
+    def render_order_actions(self, colname, record):
+        return None
+
+    def render_salaried(self, colname, record):
+        salaried = OrderData(self.context, order=record).salaried\
+            or ifaces.SALARIED_NO
+        return translate(vocabs.salaried_vocab()[salaried],
+                         context=self.request)
+
+    def render_state(self, colname, record):
+        state = OrderData(self.context, order=record).state
+        if not state:
+            return '-/-'
+        return translate(vocabs.state_vocab()[state], context=self.request)
+
+    def render_dt(self, colname, record):
+        value = record.attrs.get(colname, '')
+        if value:
+            value = value.strftime(DT_FORMAT)
+        return value
+
+    def render_tour(self, colname, record):
+        order_data = OrderData(self.context, order=record)
+        tour = ""
+        
+        TOUR_NAME = "Lorentz Lab"
+        for booking in order_data.bookings:
+            if TOUR_NAME in booking.attrs.get('title', ''):
+                return booking.attrs.get('title', '')
+
+        return tour
+
+    def render_date(self, colname, record):
+        order_data = OrderData(self.context, order=record)
+        tour = ""
+
+
+        TOUR_NAME = "Lorentz Lab"
+        for booking in order_data.bookings:
+            if TOUR_NAME in booking.attrs.get('title', ''):
+                startdate = ulocalized_time(DT(booking.attrs.get('eventstart', '')), long_format=False, context=self.context)
+                date = "%s, %s - %s" %(startdate, booking.attrs.get('eventstart', '').strftime("%H:%M"), booking.attrs.get('eventend', '').strftime("%H:%M"))
+                return date
+
+        return tour
+
+    def render_quantity(self, colname, record):
+        order_data = OrderData(self.context, order=record)
+        tour = ""
+        
+        TOUR_NAME = "Lorentz Lab"
+        for booking in order_data.bookings:
+            if TOUR_NAME in booking.attrs.get('title', ''):
+                return str(int(booking.attrs.get('buyable_count', '')))
+
+        return tour
+
+    @property
+    def ajaxurl(self):
+        return u'{0}/{1}'.format(
+            self.context.absolute_url(),
+            self.data_view_name
+        )
+
+    @property
+    def columns(self):
+        return [{
+            'id': 'actions',
+            'label': _('actions', default=u'Actions'),
+            'head': self.render_order_actions_head,
+            'renderer': self.render_order_actions,
+        },{
+            'id': 'tour',
+            'label': _('tour', default=u'Tour'),
+            'renderer': self.render_tour,
+        },{
+            'id': 'date',
+            'label': _('date', default=u'Date'),
+            'renderer': self.render_date,
+        },{
+            'id': 'quantity',
+            'label': _('total', default=u'Aantal'),
+            'renderer': self.render_quantity,
+        }, {
+            'id': 'personal_data.lastname',
+            'label': _('lastname', default=u'Last Name'),
+        }, {
+            'id': 'personal_data.firstname',
+            'label': _('firstname', default=u'First Name'),
+        }, {
+            'id': 'personal_data.email',
+            'label': _('email', default=u'Email'),
+        }]
 
 class OrdersTable(OrdersTableBase):
 
@@ -514,6 +639,16 @@ class OrdersTable(OrdersTableBase):
             self.request.response.setHeader('X-Theme-Disabled', 'True')
         return super(OrdersTable, self).__call__()
 
+class OrdersToursTable(OrdersToursTableBase):
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        # disable diazo theming if ajax call
+        if '_' in self.request.form:
+            self.request.response.setHeader('X-Theme-Disabled', 'True')
+        return super(OrdersToursTable, self).__call__()
 
 
 def vendors_form_vocab():
@@ -718,6 +853,187 @@ class OrdersTable(OrdersTableBase):
             self.request.response.setHeader('X-Theme-Disabled', 'True')
         return super(OrdersTable, self).__call__()
 
+class OrdersToursTable(OrdersToursTableBase):
+
+    def render_filter(self):
+        # vendor areas of current user
+        vendors = vendors_form_vocab()
+        vendor_selector = None
+        # vendor selection, include if more than one vendor
+        if len(vendors) > 2:
+            vendor_selector = factory(
+                'div:label:select',
+                name='vendor',
+                value=self.request.form.get('vendor', ''),
+                props={
+                    'vocabulary': vendors,
+                    'label': _('filter_for_vendors',
+                               default=u'Filter for vendors'),
+                }
+            )
+        # customers of current user
+        customers = customers_form_vocab()
+        customer_selector = None
+        # customers selection, include if more than one customer
+        if len(customers) > 2:
+            customer_selector = factory(
+                'div:label:select',
+                name='customer',
+                value=self.request.form.get('customer', ''),
+                props={
+                    'vocabulary': customers,
+                    'label': _('filter_for_customers',
+                               default=u'Filter for customers'),
+                }
+            )
+
+        states = states_form_vocab()
+        state_selector = factory(
+            'div:label:select',
+            name='state',
+            value=self.request.form.get('state', ''),
+            props={
+                'vocabulary': states,
+                'label': _('filter_for_state',
+                           default=u'Filter for states'),
+            }
+        )
+
+        salaried = salaried_form_vocab()
+        salaried_selector = factory(
+            'div:label:select',
+            name='salaried',
+            value=self.request.form.get('salaried', ''),
+            props={
+                'vocabulary': salaried,
+                'label': _('filter_for_salaried',
+                           default=u'Filter for salaried state'),
+            }
+        )
+
+        # concatenate filters
+        filter_widgets = ''
+        if vendor_selector:
+            filter_widgets += vendor_selector(request=self.request)
+        if customer_selector:
+            filter_widgets += customer_selector(request=self.request)
+
+        filter_widgets += state_selector(request=self.request)
+        filter_widgets += salaried_selector(request=self.request)
+
+        return filter_widgets
+
+    def render_order_actions_head(self):
+        tag = Tag(Translate(self.request))
+        select_all_orders_attrs = {
+            'name': 'select_all_orders',
+            'type': 'checkbox',
+            'class_': 'select_all_orders',
+            'title': _('select_all_orders',
+                       default=u'Select all visible orders'),
+        }
+        select_all_orders = tag('input', **select_all_orders_attrs)
+        notify_customers_target = self.context.absolute_url()
+        notify_customers_attributes = {
+            'ajax:target': notify_customers_target,
+            'class_': 'notify_customers',
+            'href': '',
+            'title': _('notify_customers',
+                       default=u'Notify customers of selected orders'),
+        }
+        notify_customers = tag('a', '&nbsp;', **notify_customers_attributes)
+        return select_all_orders + notify_customers
+
+    def render_order_actions(self, colname, record):
+        tag = Tag(Translate(self.request))
+        vendor_uid = self.request.form.get('vendor', '')
+        if vendor_uid:
+            view_order_target = '%s?uid=%s&vendor=%s' % (
+                self.context.absolute_url(),
+                str(record.attrs['uid']),
+                vendor_uid)
+        else:
+            view_order_target = '%s?uid=%s' % (
+                self.context.absolute_url(),
+                str(record.attrs['uid']))
+        view_order_attrs = {
+            'ajax:bind': 'click',
+            'ajax:target': view_order_target,
+            'ajax:overlay': 'order',
+            'class_': 'contenttype-document',
+            'href': '',
+            'title': _('view_order', default=u'View Order'),
+        }
+        view_order = tag('a', '&nbsp;', **view_order_attrs)
+        select_order_attrs = {
+            'name': 'select_order',
+            'type': 'checkbox',
+            'value': record.attrs['uid'],
+            'class_': 'select_order',
+        }
+        select_order = tag('input', **select_order_attrs)
+        return select_order + view_order
+
+    def check_modify_order(self, order):
+        vendor_uid = self.request.form.get('vendor', '')
+        if vendor_uid:
+            vendor_uids = [vendor_uid]
+            vendor = get_vendor_by_uid(self.context, vendor_uid)
+            user = plone.api.user.get_current()
+            if not user.checkPermission(permissions.ModifyOrders, vendor):
+                return False
+        else:
+            vendor_uids = get_vendor_uids_for()
+            if not vendor_uids:
+                return False
+        return True
+
+    def render_salaried(self, colname, record):
+        if not self.check_modify_order(record):
+            salaried = OrderData(self.context, order=record).salaried
+            return translate(vocabs.salaried_vocab()[salaried],
+                             context=self.request)
+        return OrderSalariedDropdown(
+            self.context,
+            self.request,
+            record
+        ).render()
+
+    def render_state(self, colname, record):
+        if not self.check_modify_order(record):
+            state = OrderData(self.context, order=record).state
+            return translate(vocabs.state_vocab()[state],
+                             context=self.request)
+        return OrderStateDropdown(
+            self.context,
+            self.request,
+            record
+        ).render()
+
+    @property
+    def ajaxurl(self):
+        params = [
+            ('vendor', self.request.form.get('vendor')),
+            ('customer', self.request.form.get('customer')),
+            ('state', self.request.form.get('state')),
+            ('salaried', self.request.form.get('salaried')),
+        ]
+        query = urllib.urlencode(dict([it for it in params if it[1]]))
+        query = query and u'?{0}'.format(query) or ''
+        return u'{0:s}/{1:s}{2:s}'.format(
+            self.context.absolute_url(),
+            self.data_view_name,
+            query
+        )
+
+    def __call__(self):
+        # check if authenticated user is vendor
+        if not get_vendors_for():
+            raise Unauthorized
+        # disable diazo theming if ajax call
+        if '_' in self.request.form:
+            self.request.response.setHeader('X-Theme-Disabled', 'True')
+        return super(OrdersToursTable, self).__call__()
 
 class MyOrdersTable(OrdersTableBase):
     data_view_name = '@@myordersdata'
@@ -803,6 +1119,131 @@ class OrdersData(OrdersTable, TableData):
                         with_size=True)
         length = res.next()
         return length, res
+
+
+class OrdersToursData(OrdersToursTable, TableData):
+    soup_name = 'bda_plone_orders_orders'
+    search_text_index = 'text'
+
+    def _get_buyables_in_context(self, context):
+        catalog = plone.api.portal.get_tool("portal_catalog")
+        path = '/'.join(context.getPhysicalPath())
+        brains = catalog(path=path, object_provides=IBuyable.__identifier__)
+        for brain in brains:
+            yield brain.UID
+
+    def sort(self):
+        columns = self.columns
+        sortparams = dict()
+        sortcols_idx = int(self.request.form.get('iSortCol_0'))
+        sort_id = columns[sortcols_idx]['id']
+        sortparams['index'] = sort_id
+        sortparams['reverse'] = self.request.form.get('sSortDir_0') == 'desc'
+        return sortparams
+
+    def get_title_tour(self, lazyrecord):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                return booking.attrs.get('title', '')
+
+        return tour
+
+    def get_date_tour(self, lazyrecord):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                return booking.attrs.get('eventstart', '')
+
+        return tour
+
+    def get_quantity_tour(self, lazyrecord):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                return int(booking.attrs.get('buyable_count', 0))
+
+        return tour
+
+
+    def query(self, soup):
+        language = getattr(self.context, 'language', 'nl')
+        tours_path = '/%s/events/week' %(language)
+        tours_context = plone.api.content.get(path=tours_path)
+
+        # fetch user vendor uids
+        vendor_uids = get_vendor_uids_for()
+        # filter by given vendor uid or user vendor uids
+        vendor_uid = self.request.form.get('vendor')
+        if vendor_uid:
+            vendor_uid = uuid.UUID(vendor_uid)
+            # raise if given vendor uid not in user vendor uids
+            if vendor_uid not in vendor_uids:
+                raise Unauthorized
+            query = Any('vendor_uids', [vendor_uid])
+        else:
+            query = Any('vendor_uids', vendor_uids)
+
+        # filter by customer if given
+        customer = self.request.form.get('customer')
+        if customer:
+            query = query & Eq('creator', customer)
+
+        # Filter by state if given
+        state = self.request.form.get('state')
+        if state:
+            query = query & Eq('state', state)
+
+        # Filter by salaried if given
+        salaried = self.request.form.get('salaried')
+        if salaried:
+            query = query & Eq('salaried', salaried)
+
+        # filter by search term if given
+        term = self.request.form['sSearch'].decode('utf-8')
+        if term:
+            # append * for proper fulltext search
+            term += '*'
+            query = query & Contains(self.search_text_index, term)
+        # get buyable uids for given context, get all buyables on site root
+        # use explicit IPloneSiteRoot to make it play nice with lineage
+        #if not IPloneSiteRoot.providedBy(self.context):
+        buyable_uids = self._get_buyables_in_context(tours_context)
+        query = query & Any('buyable_uids', buyable_uids)
+        
+        # query orders and return result
+        sort = self.sort()
+        special_sort = False
+        original_sort = sort['index']
+        if sort['index'] in ['tour', 'date', 'quantity']:
+            sort['index'] = 'created'
+            special_sort = True
+
+        res = soup.lazy(query,
+                        sort_index=sort['index'],
+                        reverse=sort['reverse'],
+                        with_size=True)
+        length = res.next()
+
+        if special_sort:
+            if original_sort in ["tour"]:
+                list_res = sorted(list(res), key=self.get_title_tour, reverse=sort['reverse'])
+            elif original_sort in ["date"]:
+                list_res = sorted(list(res), key=self.get_date_tour, reverse=sort['reverse'])
+            else:
+                list_res = sorted(list(res), key=self.get_quantity_tour, reverse=sort['reverse'])
+            return length, list_res
+        else:
+            return length, res
 
 
 class MyOrdersData(MyOrdersTable, TableData):

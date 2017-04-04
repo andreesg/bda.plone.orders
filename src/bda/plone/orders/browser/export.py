@@ -300,10 +300,10 @@ class ExportToursContextual(BrowserView):
         TOUR_EXPORT_ATTRS = [
             ('tour', 'Tour'),
             ('date', 'Datum'),
+            ('quantity', 'Aantal'),
             ('last-name', 'Achternaam'),
             ('first-name', 'Voornaam'),
-            ('email', 'Email'),
-            ('quantity', 'Aantal')
+            ('email', 'Email'),   
         ]
 
         context = self.context
