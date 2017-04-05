@@ -43,6 +43,13 @@ def salaried_vocab():
     }
     return vocab
 
+def date_filter_vocab():
+    vocab = {
+        "today": _('today', default=u'Today'),
+        "week": _('this_week', default=u'This week'),
+        "month": _('this_month', default=u'This month')
+    }
+    return vocab
 
 def salaried_transitions_vocab():
     vocab = {

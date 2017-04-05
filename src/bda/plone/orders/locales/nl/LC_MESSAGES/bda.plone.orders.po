@@ -41,6 +41,27 @@ msgstr ""
 msgid "all"
 msgstr "Alle"
 
+#. Default: "Today"
+#: ./browser/views.py:349
+msgid "today"
+msgstr "Vandaag"
+
+#. Default: "This week"
+#: ./browser/views.py:349
+msgid "this_week"
+msgstr "Deze week"
+
+#. Default: "This month"
+#: ./browser/views.py:349
+msgid "this_month"
+msgstr "Deze maand"
+
+#. Default: "Filter for date"
+#: ./browser/views.py:349
+msgid "filter_for_date"
+msgstr "Filter voor datum"
+
+
 #. Default: "Please provide the email adress you used for submitting the order."
 #: ./browser/views.py:938
 msgid "anon_auth_err_email"
@@ -271,7 +292,7 @@ msgstr ""
 #: ./browser/bookings.py:187
 #: ./browser/views.py:408
 msgid "filter_for_state"
-msgstr ""
+msgstr "Filter voor staat"
 
 #. Default: "Filter for vendors"
 #: ./browser/bookings.py:157

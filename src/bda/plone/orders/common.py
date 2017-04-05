@@ -765,6 +765,8 @@ class OrderData(OrderState):
         self.reindex_bookings(bookings)
         self.reindex_order(order)
 
+        transaction.get().commit()
+
     @property
     def salaried(self):
         return calculate_order_salaried(self.bookings)
