@@ -68,7 +68,11 @@
                     'bSortable': false,
                     'aTargets': [0]
                 }],
-                "aaSorting": [[1, "desc"]],
+                "aLengthMenu": [
+                    [10, 25, 50, 100, -1],
+                    [10, 25, 50, 100, "Alle"]
+                ],
+                "aaSorting": [[1, ""]],
                 "oSearch": {"sSearch": hash},
                 "fnDrawCallback": orders.bind
             });
@@ -83,6 +87,11 @@
                              .bind('change', orders.filter_orders);
             $('#input-salaried').unbind('change')
                                 .bind('change', orders.filter_orders);
+            $('#input-datefilter').unbind('change')
+                                .bind('change', orders.filter_orders);
+
+            $('#export-tours').unbind('click')
+                                .bind('click', orders.export_tours);
         },
 
         cancel_confirm_binder: function(context) {
@@ -147,6 +156,32 @@
             $(this).parent().find('.booking_comment_edit').hide();
         },
 
+        export_tours: function(event) {
+            event.preventDefault();
+            var rows = [];
+            var oTable = document.getElementById('bdaploneorders');
+            var oDataTable = $(oTable).dataTable();
+            var data = oDataTable.fnGetData();
+
+            $("#export-tours").attr("href", "@@exporttours");
+            for (i = 0; i < data.length; i++) {
+                var status_html = $($.parseHTML(data[i][6])[0]);
+                var status = $(status_html).text();
+                var item = {
+                    "date": data[i][1],
+                    "quantity": data[i][2],
+                    "lastname": data[i][3],
+                    "firstname": data[i][4],
+                    "email": data[i][5],
+                    "status": status
+                }
+                rows.push(item);
+            }
+
+            var href = $("#export-tours").attr("href");
+            $("#export-tours").attr("href", href+"?data="+JSON.stringify(rows));
+            location.href = $("#export-tours").attr("href");
+        },
 
         filter_orders: function(event) {
             event.preventDefault();
@@ -156,6 +191,7 @@
             var customer = $('#input-customer', wrapper).val();
             var state = $('#input-state', wrapper).val();
             var salaried = $('#input-salaried', wrapper).val();
+            var datefilter = $('#input-datefilter', wrapper).val();
 
             var ajax_table = wrapper.closest('.ajaxtable');
             var action = ajax_table.data('tablename');
@@ -164,6 +200,11 @@
             target.params.customer = customer;
             target.params.state = state;
             target.params.salaried = salaried;
+            target.params.datefilter = datefilter;
+
+            if (datefilter != undefined) {
+                target.params.salaried = datefilter;
+            }
 
             var selector = '#orders_wrapper';
             if (!$('#orders_wrapper').length) {
@@ -266,6 +307,7 @@
                             "customer": $('#input-customer').val(),
                             "state": $('#input-state').val(),
                             "salaried": $('#input-salaried').val(),
+                            "datefilter": $('#input-datefilter').val(),
                             "group_by": $('#input-group_by').val(),
                             "from_date": $('#input-from_date').val(),
                             "to_date": $('#input-to_date').val()

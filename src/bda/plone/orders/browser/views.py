@@ -55,6 +55,7 @@ from bda.plone.ticketshop.interfaces import ITicketOccurrenceData
 from Products.CMFPlone.utils import safe_unicode
 from Products.CMFPlone.i18nl10n import ulocalized_time
 from plone.app.event.base import DT
+import calendar
 
 import plone.api
 IS_P4 = pkg_resources.require("Products.CMFPlone")[0].version[0] == '4'
@@ -69,15 +70,56 @@ def _get_ordervalue(context, colname, record):
         value = order.attrs.get(colname, '')
         return value
 
-def get_tours_events(context):
+def this_week(elem):
+    tour_date = elem['startdate']
+
+    if (tour_date.date().isocalendar()[1] == datetime.datetime.today().date().isocalendar()[1]) and (tour_date.date().year == datetime.datetime.today().date().year):
+        return True
+    else:
+        return False
+
+
+def get_tours_events(context, datefilter=None, statefilter=None):
     bookings_soup = get_bookings_soup(context)
-    start = datetime.datetime.today()
-    events = get_events(context, 
-                        start=start, 
-                        sort='start', 
-                        sort_reverse=False, 
-                        ret_mode=RET_MODE_OBJECTS, 
-                        expand=True)
+    
+    language = getattr(context, 'language', 'nl')
+    tours_path = '/%s/events/week' %(language)
+    tours_context = plone.api.content.get(path=tours_path)
+    context = tours_context
+
+    if datefilter == "today":
+        start = datetime.datetime.today().date()
+        end = datetime.datetime.today().date()
+        events = get_events(context, 
+                            start=start, 
+                            end=end,
+                            sort='start', 
+                            sort_reverse=False, 
+                            ret_mode=RET_MODE_OBJECTS, 
+                            expand=True)
+
+    elif datefilter == "month":
+        month = datetime.datetime.today().date().month
+        year = datetime.datetime.today().date().year
+        monthrange, last_day = calendar.monthrange(year, month)
+        start = datetime.date(year=year, month=month, day=1)
+        end = datetime.date(year=year, month=month, day=last_day)
+
+        events = get_events(context, 
+                            start=start, 
+                            end=end,
+                            sort='start', 
+                            sort_reverse=False, 
+                            ret_mode=RET_MODE_OBJECTS, 
+                            expand=True)
+    else:
+        start = datetime.datetime.today().date()
+        events = get_events(context,
+                            sort='start', 
+                            sort_reverse=False, 
+                            ret_mode=RET_MODE_OBJECTS, 
+                            expand=True)
+
 
     buyables = []
     for occ in events:
@@ -98,14 +140,27 @@ def get_tours_events(context):
                         if "Lorentz Lab" in buyable_record.attrs['title']:
                             startdate = ulocalized_time(DT(buyable_record.attrs['eventstart']), long_format=False, context=context)
                             new_entry = {
-                                "tour": buyable_record.attrs['title'],
                                 "date": "%s, %s - %s" %(startdate, buyable_record.attrs['eventstart'].strftime("%H:%M"), buyable_record.attrs['eventend'].strftime("%H:%M")),
                                 "first-name":safe_unicode(_get_ordervalue(context, 'personal_data.firstname', buyable_record)),
                                 "last-name":safe_unicode(_get_ordervalue(context, 'personal_data.lastname', buyable_record)),
                                 "email":buyable_record.attrs['email'],
-                                "quantity":buyable_record.attrs['buyable_count']
+                                "quantity":buyable_record.attrs['buyable_count'],
+                                "startdate": buyable_record.attrs['eventstart'],
+                                "state": buyable_record.attrs['state']
                             }
                             buyables.append(new_entry)
+    
+    if datefilter == "week":
+        new_buyables = [b for b in buyables if this_week(b)]
+        if statefilter != None and statefilter != "":
+            new_buyables_state = [b for b in new_buyables if b['state'] == statefilter]
+            return new_buyables_state
+        return new_buyables
+
+    if statefilter != None and statefilter != "":
+        new_buyables = [b for b in buyables if b['state'] == statefilter]
+        return new_buyables
+
     return buyables
 
 
@@ -292,6 +347,9 @@ class TableData(BrowserView):
     def slice(self, fullresult):
         start = int(self.request.form['iDisplayStart'])
         length = int(self.request.form['iDisplayLength'])
+        if length == -1:
+            length = 100000000000
+            
         count = 0
         for lr in fullresult:
             if count >= start and count < (start + length):
@@ -400,9 +458,6 @@ class ToursTableBase(BrowserView):
     @property
     def get_columns(self):
         return [{
-                'id': 'tour-name',
-                'label': 'Tour'
-            },{
                 'id': 'tour-date',
                 'label': _('date', default=u'Date'),
             }, {
@@ -544,10 +599,24 @@ class OrdersToursTableBase(BrowserView):
                          context=self.request)
 
     def render_state(self, colname, record):
-        state = OrderData(self.context, order=record).state
+        """state = OrderData(self.context, order=record).state
+        if not state:
+            return '-/-'"""
+        order_data = OrderData(self.context, order=record)
+        tour = ""
+        
+        TOUR_NAME = "Lorentz Lab"
+        for booking in order_data.bookings:
+            if TOUR_NAME in booking.attrs.get('title', ''):
+                return booking.attrs.get('state', '')
+
+        state = order_data.attrs.get('state', '')
         if not state:
             return '-/-'
-        return translate(vocabs.state_vocab()[state], context=self.request)
+        else:
+            return state
+
+        return '-/-'
 
     def render_dt(self, colname, record):
         value = record.attrs.get(colname, '')
@@ -606,10 +675,6 @@ class OrdersToursTableBase(BrowserView):
             'head': self.render_order_actions_head,
             'renderer': self.render_order_actions,
         },{
-            'id': 'tour',
-            'label': _('tour', default=u'Tour'),
-            'renderer': self.render_tour,
-        },{
             'id': 'date',
             'label': _('date', default=u'Date'),
             'renderer': self.render_date,
@@ -626,6 +691,10 @@ class OrdersToursTableBase(BrowserView):
         }, {
             'id': 'personal_data.email',
             'label': _('email', default=u'Email'),
+        }, {
+            'id': 'state',
+            'label': _('state', default=u'State'),
+            'renderer': self.render_state,
         }]
 
 class OrdersTable(OrdersTableBase):
@@ -669,6 +738,10 @@ def states_form_vocab():
 def salaried_form_vocab():
     salaried = vocabs.salaried_vocab()
     return [('', _('all', default='All'))] + salaried.items()
+
+def date_filter_form_vocab():
+    date_filter = vocabs.date_filter_vocab()
+    return [('', _('all', default='All')), ('today', _('today', default='Today')), ('week', _('this_week', default='This week')), ('month', _('this_month', default='This month'))] 
 
 
 class OrdersTable(OrdersTableBase):
@@ -911,15 +984,30 @@ class OrdersToursTable(OrdersToursTableBase):
             }
         )
 
+        date_filter = date_filter_form_vocab()
+        date_filter_selector = factory(
+            'div:label:select',
+            name='datefilter',
+            value=self.request.form.get('datefilter', self.request.form.get('salaried', 'all')),
+            props={
+                'vocabulary': date_filter,
+                'label': _('filter_for_date',
+                           default=u'Filter for date'),
+            }
+        )
+
         # concatenate filters
         filter_widgets = ''
-        if vendor_selector:
+        """if vendor_selector:
             filter_widgets += vendor_selector(request=self.request)
         if customer_selector:
             filter_widgets += customer_selector(request=self.request)
+        """
 
-        filter_widgets += state_selector(request=self.request)
-        filter_widgets += salaried_selector(request=self.request)
+        if date_filter_selector:
+            filter_widgets += date_filter_selector(request=self.request)
+        """filter_widgets += state_selector(request=self.request)"""
+        """filter_widgets += salaried_selector(request=self.request)"""
 
         return filter_widgets
 
@@ -1000,15 +1088,33 @@ class OrdersToursTable(OrdersToursTableBase):
         ).render()
 
     def render_state(self, colname, record):
-        if not self.check_modify_order(record):
-            state = OrderData(self.context, order=record).state
-            return translate(vocabs.state_vocab()[state],
-                             context=self.request)
-        return OrderStateDropdown(
-            self.context,
-            self.request,
-            record
-        ).render()
+        tag = Tag(Translate(self.request))
+        order_data = OrderData(self.context, order=record)
+        tour = ""
+        
+        booking_state = ""
+        booking_uid = ""
+
+        TOUR_NAME = "Lorentz Lab"
+        for booking in order_data.bookings:
+            if TOUR_NAME in booking.attrs.get('title', ''):
+                booking_state = booking.attrs.get('state', '')
+                booking_uid = booking.attrs.get('uid', 'uid')
+                break
+
+        state_attributes = {
+            'class_': 'booking-cancel-link discreet',
+            'href': '%s/@@booking_cancel?uid=%s' %(self.context.absolute_url(), booking_uid),
+            'title': _('cancel_booking',
+                       default=u'Cancel booking'),
+            'state': translate(vocabs.state_vocab()[booking_state], context=self.request)
+        }
+        
+        if booking_state != 'cancelled':
+            state_button = "<span>%s</span> <a href='%s' class='%s' title='%s'><img src='++resource++bda.plone.orders/delete.png' alt='cancel booking icon' title='cancel booking'/></a>" %(state_attributes['state'], state_attributes['href'], state_attributes['class_'], state_attributes['title'])
+        else:
+            state_button = "<span>%s</span>" %(state_attributes['state'])
+        return state_button
 
     @property
     def ajaxurl(self):
@@ -1174,6 +1280,65 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         return tour
 
+    def get_tour_date(self, lazyrecord, date_type):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                if date_type == "today":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if tour_date.date() == datetime.datetime.today().date():
+                        return True
+                    else:
+                        return False
+                elif date_type == "week":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if (tour_date.date().isocalendar()[1] == datetime.datetime.today().date().isocalendar()[1]) and (tour_date.date().year == datetime.datetime.today().date().year):
+                        return True
+                    else:
+                        return False
+                elif date_type == "month":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if (tour_date.date().month == datetime.datetime.today().date().month) and (tour_date.date().year == datetime.datetime.today().date().year):
+                        return True
+                    else:
+                        return False
+                else:
+                    return True
+
+        return True
+
+    def get_state_tour(self, lazyrecord, statefilter):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                if booking.attrs.get('state', '') == statefilter:
+                    return True
+                else:
+                    return False
+
+        return False
+
+    def filter_date(self, lazyrecord, date):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+        booking_date = ""
+        for booking in order_data.bookings:
+            if "Lorentz Lab" in booking.attrs.get('title', ''):
+                booking_date = booking.attrs.get('eventstart', '')
+                break
+
+        if booking_date.date() > date:
+            return True
+        else:
+            return False
 
     def query(self, soup):
         language = getattr(self.context, 'language', 'nl')
@@ -1201,10 +1366,16 @@ class OrdersToursData(OrdersToursTable, TableData):
         # Filter by state if given
         state = self.request.form.get('state')
         if state:
-            query = query & Eq('state', state)
+            if state != "cancelled":
+                query = query & Eq('state', state)
 
         # Filter by salaried if given
         salaried = self.request.form.get('salaried')
+        date_filter = ""
+        if salaried not in  ["yes", "no"]:
+            date_filter = salaried
+            salaried = "yes"
+
         if salaried:
             query = query & Eq('salaried', salaried)
 
@@ -1234,16 +1405,30 @@ class OrdersToursData(OrdersToursTable, TableData):
                         with_size=True)
         length = res.next()
 
+        if date_filter:
+            # filter dates here
+            new_res = [elem for elem in list(res) if self.get_tour_date(elem, date_filter)]
+            length = len(new_res)
+        else:
+            new_res = res
+
+        if state:
+            # filter state here
+            new_filtered_res = [elem for elem in list(new_res) if self.get_state_tour(elem, state)]
+            length = len(new_filtered_res)
+        else:
+            new_filtered_res = new_res
+
         if special_sort:
             if original_sort in ["tour"]:
-                list_res = sorted(list(res), key=self.get_title_tour, reverse=sort['reverse'])
+                list_res = sorted(list(new_filtered_res), key=self.get_title_tour, reverse=sort['reverse'])
             elif original_sort in ["date"]:
-                list_res = sorted(list(res), key=self.get_date_tour, reverse=sort['reverse'])
+                list_res = sorted(list(new_filtered_res), key=self.get_date_tour, reverse=sort['reverse'])
             else:
-                list_res = sorted(list(res), key=self.get_quantity_tour, reverse=sort['reverse'])
+                list_res = sorted(list(new_filtered_res), key=self.get_quantity_tour, reverse=sort['reverse'])
             return length, list_res
         else:
-            return length, res
+            return length, new_filtered_res
 
 
 class MyOrdersData(MyOrdersTable, TableData):
@@ -1632,7 +1817,7 @@ class BookingCancel(BrowserView):
             type='info'
         )
         self.request.response.redirect(
-            self.context.absolute_url() + '/@@orders'
+            self.context.absolute_url() + '/@@orderstours'
         )
 
 

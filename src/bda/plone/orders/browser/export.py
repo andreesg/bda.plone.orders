@@ -38,9 +38,10 @@ import datetime
 import plone.api
 import uuid
 import yafowil.loader  # noqa
-
+from bda.plone.orders import vocabularies as vocabs
+from zope.i18n import translate
 from bda.plone.orders.browser.views import get_tours_events
-
+import json
 class DialectExcelWithColons(csv.excel):
     delimiter = ';'
 
@@ -297,13 +298,17 @@ class ExportToursContextual(BrowserView):
         return cleanup_for_csv(val)
 
     def get_csv(self):
+
+        datefilter = self.request.get('datefilter', None)
+        statefilter = self.request.get('state', None)
+
         TOUR_EXPORT_ATTRS = [
-            ('tour', 'Tour'),
             ('date', 'Datum'),
             ('quantity', 'Aantal'),
             ('last-name', 'Achternaam'),
             ('first-name', 'Voornaam'),
-            ('email', 'Email'),   
+            ('email', 'Email'),
+            ('state', 'Status')
         ]
 
         context = self.context
@@ -314,7 +319,25 @@ class ExportToursContextual(BrowserView):
         # exported column keys as first line
         ex.writerow([attr[1] for attr in TOUR_EXPORT_ATTRS])
 
-        bookings = get_tours_events(self.context)
+        data_request = self.request.get('data', None)
+
+        bookings = []
+        try:
+            data = json.loads(data_request)
+        except:
+            data = []
+            
+        for elem in data:
+            new_booking = {
+                'date': elem['date'],
+                'quantity': elem['quantity'],
+                'last-name': elem['lastname'],
+                'first-name': elem['firstname'],
+                'email': elem['email'],
+                'state': elem['status']
+            }
+
+            bookings.append(new_booking)
 
         for booking in bookings:
             row = [cleanup_for_csv(booking.get(attr[0], '')) for attr in TOUR_EXPORT_ATTRS]

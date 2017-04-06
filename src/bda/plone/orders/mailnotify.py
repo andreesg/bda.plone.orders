@@ -49,11 +49,9 @@ from bda.plone.cart import is_ticket
 
 logger = logging.getLogger('bda.plone.orders')
 
-
 NOTIFICATIONS = {}
 
-
-LIVE_URL = "http://ticketshop.intk.com"
+LIVE_URL = "http://tickets.teylersmuseum.nl"
 
 POSSIBLE_TEMPLATE_CALLBACKS = [
     'booking_cancelled_title',
@@ -769,13 +767,11 @@ def notify_booking_cancelled_shopmanager(event):
 
 
 NOTIFICATIONS['booking_cancelled'] = []
-NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_customer)
-NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_shopmanager)
+#NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_customer)
+#NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_shopmanager)
 
 
 # BOOKING RESERVED TO ORDERED
-
-
 def dispatch_notify_booking_reserved_to_ordered(event):
     for func in NOTIFICATIONS['booking_reserved_to_ordered']:
         func(event)
@@ -852,3 +848,5 @@ def notify_stock_threshold_reached(event):
 
 NOTIFICATIONS['stock_threshold_reached'] = []
 NOTIFICATIONS['stock_threshold_reached'].append(notify_stock_threshold_reached)
+
+
