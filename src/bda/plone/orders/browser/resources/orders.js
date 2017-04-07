@@ -162,25 +162,35 @@
             var oTable = document.getElementById('bdaploneorders');
             var oDataTable = $(oTable).dataTable();
             var data = oDataTable.fnGetData();
-
-            $("#export-tours").attr("href", "@@exporttours");
-            for (i = 0; i < data.length; i++) {
-                var status_html = $($.parseHTML(data[i][6])[0]);
-                var status = $(status_html).text();
-                var item = {
-                    "date": data[i][1],
-                    "quantity": data[i][2],
-                    "lastname": data[i][3],
-                    "firstname": data[i][4],
-                    "email": data[i][5],
-                    "status": status
+            var data_ajax_url = $("#bdaploneorders").attr("data-ajaxurl");
+            var params = $("#bdaploneorders").DataTable().ajax.params();
+            params.iDisplayLength = -1;
+            params.date_filter = "future";
+            
+            $.ajax({
+                url: data_ajax_url,
+                data: params
+            }).done(function(results) {
+                var json = results.aaData;
+                var rows = [];
+                $("#export-tours").attr("href", "@@exporttours");
+                for (i = 0; i < json.length; i++) {
+                    var status_html = $($.parseHTML(json[i][6])[0]);
+                    var status = $(status_html).text();
+                    var item = {
+                        "date": json[i][1],
+                        "quantity": json[i][2],
+                        "lastname": json[i][3],
+                        "firstname": json[i][4],
+                        "email": json[i][5],
+                        "status": status
+                    }
+                    rows.push(item);
                 }
-                rows.push(item);
-            }
-
-            var href = $("#export-tours").attr("href");
-            $("#export-tours").attr("href", href+"?data="+JSON.stringify(rows));
-            location.href = $("#export-tours").attr("href");
+                var href = $("#export-tours").attr("href");
+                $("#export-tours").attr("href", href+"?data="+JSON.stringify(rows));
+                location.href = $("#export-tours").attr("href");
+            });
         },
 
         filter_orders: function(event) {

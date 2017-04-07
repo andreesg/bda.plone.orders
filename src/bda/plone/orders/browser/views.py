@@ -77,7 +77,7 @@ def this_week(elem):
         return True
     else:
         return False
-
+        
 
 def get_tours_events(context, datefilter=None, statefilter=None):
     bookings_soup = get_bookings_soup(context)
@@ -137,7 +137,7 @@ def get_tours_events(context, datefilter=None, statefilter=None):
                 if buyable_list:
                     for elem in buyable_list:
                         buyable_record = elem
-                        if "Lorentz Lab" in buyable_record.attrs['title']:
+                        if "Lorentz" in buyable_record.attrs['title']:
                             startdate = ulocalized_time(DT(buyable_record.attrs['eventstart']), long_format=False, context=context)
                             new_entry = {
                                 "date": "%s, %s - %s" %(startdate, buyable_record.attrs['eventstart'].strftime("%H:%M"), buyable_record.attrs['eventend'].strftime("%H:%M")),
@@ -605,7 +605,7 @@ class OrdersToursTableBase(BrowserView):
         order_data = OrderData(self.context, order=record)
         tour = ""
         
-        TOUR_NAME = "Lorentz Lab"
+        TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
             if TOUR_NAME in booking.attrs.get('title', ''):
                 return booking.attrs.get('state', '')
@@ -628,7 +628,7 @@ class OrdersToursTableBase(BrowserView):
         order_data = OrderData(self.context, order=record)
         tour = ""
         
-        TOUR_NAME = "Lorentz Lab"
+        TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
             if TOUR_NAME in booking.attrs.get('title', ''):
                 return booking.attrs.get('title', '')
@@ -640,7 +640,7 @@ class OrdersToursTableBase(BrowserView):
         tour = ""
 
 
-        TOUR_NAME = "Lorentz Lab"
+        TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
             if TOUR_NAME in booking.attrs.get('title', ''):
                 startdate = ulocalized_time(DT(booking.attrs.get('eventstart', '')), long_format=False, context=self.context)
@@ -653,7 +653,7 @@ class OrdersToursTableBase(BrowserView):
         order_data = OrderData(self.context, order=record)
         tour = ""
         
-        TOUR_NAME = "Lorentz Lab"
+        TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
             if TOUR_NAME in booking.attrs.get('title', ''):
                 return str(int(booking.attrs.get('buyable_count', '')))
@@ -1095,7 +1095,7 @@ class OrdersToursTable(OrdersToursTableBase):
         booking_state = ""
         booking_uid = ""
 
-        TOUR_NAME = "Lorentz Lab"
+        TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
             if TOUR_NAME in booking.attrs.get('title', ''):
                 booking_state = booking.attrs.get('state', '')
@@ -1253,7 +1253,7 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         tour = ""
         for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
+            if "Lorentz" in booking.attrs.get('title', ''):
                 return booking.attrs.get('title', '')
 
         return tour
@@ -1264,7 +1264,7 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         tour = ""
         for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
+            if "Lorentz" in booking.attrs.get('title', ''):
                 return booking.attrs.get('eventstart', '')
 
         return tour
@@ -1275,7 +1275,7 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         tour = ""
         for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
+            if "Lorentz" in booking.attrs.get('title', ''):
                 return int(booking.attrs.get('buyable_count', 0))
 
         return tour
@@ -1286,7 +1286,7 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         tour = ""
         for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
+            if "Lorentz" in booking.attrs.get('title', ''):
                 if date_type == "today":
                     tour_date = booking.attrs.get('eventstart', '')
                     if tour_date.date() == datetime.datetime.today().date():
@@ -1310,35 +1310,45 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         return True
 
+    def is_date_future(self, lazyrecord):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+        today = datetime.datetime.today().date()
+        tour = ""
+        tour_booking = ""
+        for booking in order_data.bookings:
+            if "Lorentz" in booking.attrs.get('title', ''):
+                tour_booking = booking
+                break
+
+        if tour_booking:
+            tour_datetime = tour_booking.attrs.get('eventstart', '')
+            if tour_datetime:
+                tour_date = tour_datetime.date()
+                if tour_date >= today:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+
+        return False
+
     def get_state_tour(self, lazyrecord, statefilter):
         record = lazyrecord()
         order_data = OrderData(self.context, uid=record.attrs['uid'])
 
         tour = ""
         for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
+            if "Lorentz" in booking.attrs.get('title', ''):
                 if booking.attrs.get('state', '') == statefilter:
                     return True
                 else:
                     return False
 
         return False
-
-    def filter_date(self, lazyrecord, date):
-        record = lazyrecord()
-        order_data = OrderData(self.context, uid=record.attrs['uid'])
-
-        tour = ""
-        booking_date = ""
-        for booking in order_data.bookings:
-            if "Lorentz Lab" in booking.attrs.get('title', ''):
-                booking_date = booking.attrs.get('eventstart', '')
-                break
-
-        if booking_date.date() > date:
-            return True
-        else:
-            return False
 
     def query(self, soup):
         language = getattr(self.context, 'language', 'nl')
@@ -1411,6 +1421,11 @@ class OrdersToursData(OrdersToursTable, TableData):
             length = len(new_res)
         else:
             new_res = res
+
+
+        export_filter = self.request.form.get('date_filter', '')
+        if export_filter == "future":
+            new_res = [elem for elem in list(new_res) if self.is_date_future(elem)]
 
         if state:
             # filter state here

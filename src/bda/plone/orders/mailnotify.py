@@ -51,7 +51,7 @@ logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {}
 
-LIVE_URL = "http://tickets.teylersmuseum.nl"
+LIVE_URL = "http://ticketshop.intk.com"
 
 POSSIBLE_TEMPLATE_CALLBACKS = [
     'booking_cancelled_title',
