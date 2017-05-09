@@ -42,6 +42,18 @@ from bda.plone.orders import vocabularies as vocabs
 from zope.i18n import translate
 from bda.plone.orders.browser.views import get_tours_events
 import json
+from souper.soup import get_soup
+from bda.plone.orders.interfaces import INotificationSettings
+
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.application import MIMEApplication
+from email.utils import formataddr
+import smtplib
+import datetime
+
 class DialectExcelWithColons(csv.excel):
     delimiter = ';'
 
@@ -297,6 +309,15 @@ class ExportToursContextual(BrowserView):
         val = record.attrs.get(attr_name)
         return cleanup_for_csv(val)
 
+    def get_data_from_request(self, data_request):
+        try:
+            data = json.loads(data_request)
+            return data
+        except:
+            return []
+
+        return []
+
     def get_csv(self):
 
         datefilter = self.request.get('datefilter', None)
@@ -322,11 +343,9 @@ class ExportToursContextual(BrowserView):
         data_request = self.request.get('data', None)
 
         bookings = []
-        try:
-            data = json.loads(data_request)
-        except:
-            data = []
-            
+        
+        # Get data
+        data = self.get_data_from_request(data_request)
         for elem in data:
             new_booking = {
                 'date': elem['date'],
@@ -345,7 +364,156 @@ class ExportToursContextual(BrowserView):
 
         ret = sio.getvalue()
         sio.close()
+
         return ret
+
+
+class SendToursDataContextual(BrowserView):
+
+    def __call__(self):
+        self.settings = INotificationSettings(self.context)
+
+        tickets_folder = plone.api.content.get(path='/nl/tickets')
+        data = tickets_folder.unrestrictedTraverse("@@exportorderstoursdata")
+        length, res = data.query(None)
+        self.export_data_request = data.get_aaData(res)
+
+        # Special case for constructed objects like IEventOccurrence from
+        # plone.app.event
+        title = 'Tours' or aq_parent(self.context).title
+
+        filename = u'{0}_{1}.csv'.format(
+            safe_unicode(title),
+            safe_unicode(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+        )
+        filename = safe_filename(filename)
+        resp = self.request.response
+        resp.setHeader('content-type', 'text/csv; charset=utf-8')
+        resp.setHeader(
+            'content-disposition',
+            'attachment;filename={}'.format(filename)
+        )
+        return self.get_csv()
+
+    def export_val(self, record, attr_name):
+        """Get attribute from record and cleanup.
+        Since the record object is available, you can return aggregated values.
+        """
+        val = record.attrs.get(attr_name)
+        return cleanup_for_csv(val)
+
+    def transform_data(self, data):
+        if data:
+            result = []
+            raw_data = data
+            for elem in raw_data:
+                result.append({
+                    "date": elem[1],
+                    "quantity": elem[2],
+                    "lastname": elem[3],
+                    "firstname": elem[4],
+                    "email": elem[5],
+                    "status": "Nieuw" if "Nieuw" in elem[6] else "Gecanceld"
+                })
+
+            return result
+
+        return []
+
+    def get_data_from_request(self, data_request):
+        try:
+            data_request = self.transform_data(self.export_data_request)
+            return data_request
+        except:
+            return []
+
+        return []
+
+    def send_email(self, ret):
+
+        shop_manager_address = self.settings.admin_email
+        receivers = self.settings.notification_emails
+
+        shop_manager_name = self.settings.admin_name
+        if shop_manager_name:
+            from_name = shop_manager_name
+            mailfrom = formataddr((from_name, shop_manager_address))
+        else:
+            mailfrom = shop_manager_address
+
+        todays_date = datetime.datetime.today().strftime("%Y-%m-%d")
+        text = MIMEMultipart('alternative')
+        msg = MIMEMultipart('mixed')
+        msg['Subject'] = "%s - Lorentz Lab bookings" %(todays_date)
+        msg['From'] = mailfrom
+        
+        attachment = MIMEApplication(ret, _subtype = "csv")
+        attachment.add_header('content-disposition', 'attachment', filename='%s_bookings.csv' %(todays_date))
+
+        message = "<h2>%s - Lorentz Lab bookings</h2><p>Please find the bookings for the date %s in the spreadsheet attached</p>" %(todays_date, todays_date)
+        text.attach(MIMEText(message, 'html', 'utf-8'))
+        msg.attach(text)
+        msg.attach(attachment)
+
+        for receiver in receivers.split(','):
+            s = smtplib.SMTP('127.0.0.1')
+            s.sendmail(mailfrom, receiver, msg.as_string())
+            s.quit()
+
+        return True
+
+    def get_csv(self):
+
+        datefilter = self.request.get('datefilter', None)
+        statefilter = self.request.get('state', None)
+
+        TOUR_EXPORT_ATTRS = [
+            ('date', 'Datum'),
+            ('quantity', 'Aantal'),
+            ('last-name', 'Achternaam'),
+            ('first-name', 'Voornaam'),
+            ('email', 'Email'),
+            ('state', 'Status')
+        ]
+
+        context = self.context
+
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow([attr[1] for attr in TOUR_EXPORT_ATTRS])
+
+        data_request = self.request.get('data', None)
+
+        bookings = []
+        
+        # Get data
+        data = self.get_data_from_request(data_request)
+        for elem in data:
+            new_booking = {
+                'date': elem['date'],
+                'quantity': elem['quantity'],
+                'last-name': elem['lastname'],
+                'first-name': elem['firstname'],
+                'email': elem['email'],
+                'state': elem['status']
+            }
+
+            bookings.append(new_booking)
+
+        for booking in bookings:
+            row = [cleanup_for_csv(booking.get(attr[0], '')) for attr in TOUR_EXPORT_ATTRS]
+            ex.writerow(row)
+
+        ret = sio.getvalue()
+        sio.close()
+
+        self.send_email(ret)
+
+        return ret
+
+
 
 
 class ExportOrdersContextual(BrowserView):

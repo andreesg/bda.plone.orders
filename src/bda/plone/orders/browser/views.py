@@ -328,9 +328,9 @@ class TableData(BrowserView):
     def sort(self):
         columns = self.columns
         sortparams = dict()
-        sortcols_idx = int(self.request.form.get('iSortCol_0'))
+        sortcols_idx = int(self.request.form.get('iSortCol_0', '1'))
         sortparams['index'] = columns[sortcols_idx]['id']
-        sortparams['reverse'] = self.request.form.get('sSortDir_0') == 'desc'
+        sortparams['reverse'] = self.request.form.get('sSortDir_0', '') == 'desc'
         return sortparams
 
     def all(self, soup):
@@ -345,8 +345,8 @@ class TableData(BrowserView):
         return soup.storage.length.value, lazyrecords()
 
     def slice(self, fullresult):
-        start = int(self.request.form['iDisplayStart'])
-        length = int(self.request.form['iDisplayLength'])
+        start = int(self.request.form.get('iDisplayStart', '0'))
+        length = int(self.request.form.get('iDisplayLength', '-1'))
         if length == -1:
             length = 100000000000
             
@@ -362,6 +362,28 @@ class TableData(BrowserView):
         for column in self.columns:
             if column['id'] == colname:
                 return column
+
+    def get_aaData(self, lazydata):
+        columns = self.columns
+        colnames = [_['id'] for _ in columns]
+
+        def record2list(record):
+            result = list()
+            for colname in colnames:
+                coldef = self.column_def(colname)
+                renderer = coldef.get('renderer')
+                if renderer:
+                    value = renderer(colname, record)
+                else:
+                    value = record.attrs.get(colname, '')
+                result.append(value)
+            return result
+        
+        aaData = []
+        for lazyrecord in self.slice(lazydata):
+            aaData.append(record2list(lazyrecord()))
+
+        return aaData
 
     def __call__(self):
         soup = get_soup(self.soup_name, self.context)
@@ -382,6 +404,7 @@ class TableData(BrowserView):
                     value = record.attrs.get(colname, '')
                 result.append(value)
             return result
+        
         for lazyrecord in self.slice(lazydata):
             aaData.append(record2list(lazyrecord()))
         data = {
@@ -638,7 +661,6 @@ class OrdersToursTableBase(BrowserView):
     def render_date(self, colname, record):
         order_data = OrderData(self.context, order=record)
         tour = ""
-
 
         TOUR_NAME = "Lorentz"
         for booking in order_data.bookings:
@@ -1227,6 +1249,8 @@ class OrdersData(OrdersTable, TableData):
         return length, res
 
 
+
+
 class OrdersToursData(OrdersToursTable, TableData):
     soup_name = 'bda_plone_orders_orders'
     search_text_index = 'text'
@@ -1241,7 +1265,7 @@ class OrdersToursData(OrdersToursTable, TableData):
     def sort(self):
         columns = self.columns
         sortparams = dict()
-        sortcols_idx = int(self.request.form.get('iSortCol_0'))
+        sortcols_idx = int(self.request.form.get('iSortCol_0', 1))
         sort_id = columns[sortcols_idx]['id']
         sortparams['index'] = sort_id
         sortparams['reverse'] = self.request.form.get('sSortDir_0') == 'desc'
@@ -1351,6 +1375,9 @@ class OrdersToursData(OrdersToursTable, TableData):
         return False
 
     def query(self, soup):
+        if not soup:
+            soup = get_soup(self.soup_name, self.context)
+
         language = getattr(self.context, 'language', 'nl')
         tours_path = '/%s/events/week' %(language)
         tours_context = plone.api.content.get(path=tours_path)
@@ -1368,10 +1395,12 @@ class OrdersToursData(OrdersToursTable, TableData):
         else:
             query = Any('vendor_uids', vendor_uids)
 
+
         # filter by customer if given
         customer = self.request.form.get('customer')
         if customer:
             query = query & Eq('creator', customer)
+
 
         # Filter by state if given
         state = self.request.form.get('state')
@@ -1379,22 +1408,27 @@ class OrdersToursData(OrdersToursTable, TableData):
             if state != "cancelled":
                 query = query & Eq('state', state)
 
+
         # Filter by salaried if given
-        salaried = self.request.form.get('salaried')
+        salaried = self.request.form.get('salaried', '')
+
         date_filter = ""
         if salaried not in  ["yes", "no"]:
             date_filter = salaried
+            if not salaried and ("sendtoursdata" in self.request.get("URL")):
+                date_filter = "today"
             salaried = "yes"
 
         if salaried:
             query = query & Eq('salaried', salaried)
 
         # filter by search term if given
-        term = self.request.form['sSearch'].decode('utf-8')
+        term = self.request.form.get('sSearch', '').decode('utf-8')
         if term:
             # append * for proper fulltext search
             term += '*'
             query = query & Contains(self.search_text_index, term)
+
         # get buyable uids for given context, get all buyables on site root
         # use explicit IPloneSiteRoot to make it play nice with lineage
         #if not IPloneSiteRoot.providedBy(self.context):
@@ -1422,7 +1456,6 @@ class OrdersToursData(OrdersToursTable, TableData):
         else:
             new_res = res
 
-
         export_filter = self.request.form.get('date_filter', '')
         if export_filter == "future":
             new_res = [elem for elem in list(new_res) if self.is_date_future(elem)]
@@ -1444,6 +1477,42 @@ class OrdersToursData(OrdersToursTable, TableData):
             return length, list_res
         else:
             return length, new_filtered_res
+
+
+class ExportOrdersToursData(OrdersToursData):
+    
+    def get_tour_date(self, lazyrecord, date_type):
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+
+        tour = ""
+
+        date_type = "today"
+        
+        for booking in order_data.bookings:
+            if "Lorentz" in booking.attrs.get('title', ''):
+                if date_type == "today":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if tour_date.date() == datetime.datetime.today().date():
+                        return True
+                    else:
+                        return False
+                elif date_type == "week":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if (tour_date.date().isocalendar()[1] == datetime.datetime.today().date().isocalendar()[1]) and (tour_date.date().year == datetime.datetime.today().date().year):
+                        return True
+                    else:
+                        return False
+                elif date_type == "month":
+                    tour_date = booking.attrs.get('eventstart', '')
+                    if (tour_date.date().month == datetime.datetime.today().date().month) and (tour_date.date().year == datetime.datetime.today().date().year):
+                        return True
+                    else:
+                        return False
+                else:
+                    return True
+
+        return True
 
 
 class MyOrdersData(MyOrdersTable, TableData):

@@ -51,7 +51,7 @@ logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {}
 
-LIVE_URL = "http://ticketshop.intk.com"
+LIVE_URL = "http://tickets.teylersmuseum.nl"
 
 POSSIBLE_TEMPLATE_CALLBACKS = [
     'booking_cancelled_title',
@@ -64,9 +64,7 @@ POSSIBLE_TEMPLATE_CALLBACKS = [
     'stock_threshold_reached_text',
 ]
 
-
 # MAIL NOTIFICATION UTILITIES
-
 def get_order_uid(event):
     uid = None
     if ICheckoutEvent.providedBy(event):

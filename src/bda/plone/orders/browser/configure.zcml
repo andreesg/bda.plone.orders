@@ -23,6 +23,14 @@
     layer="..interfaces.IOrdersExtensionLayer" />
 
   <browser:page
+    for="*"
+    name="exportorderstours"
+    template="orders_view.pt"
+    class=".views.OrdersToursView"
+    permission="bda.plone.orders.ViewOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
+  <browser:page
     for="zope.component.interfaces.ISite"
     name="myorders"
     template="orders_view.pt"
@@ -46,6 +54,15 @@
     class=".views.OrdersToursTable"
     permission="bda.plone.orders.ViewOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
+
+  <browser:page
+    for="*"
+    name="exportorderstourstable"
+    template="orders.pt"
+    class=".views.OrdersToursTable"
+    permission="bda.plone.orders.ViewOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
 
   <browser:page
     for="zope.component.interfaces.ISite"
@@ -139,6 +156,14 @@
     class=".views.OrdersToursData"
     permission="bda.plone.orders.ViewOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
+
+  <browser:page
+    for="*"
+    name="exportorderstoursdata"
+    class=".views.ExportOrdersToursData"
+    permission="bda.plone.orders.ViewOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
 
   <browser:page
     for="zope.component.interfaces.ISite"
@@ -280,6 +305,13 @@
     for="*"
     name="exporttours"
     class=".export.ExportToursContextual"
+    permission="bda.plone.orders.ExportOrders"
+    layer="..interfaces.IOrdersExtensionLayer" />
+
+  <browser:page
+    for="*"
+    name="sendtoursdata"
+    class=".export.SendToursDataContextual"
     permission="bda.plone.orders.ExportOrders"
     layer="..interfaces.IOrdersExtensionLayer" />
 

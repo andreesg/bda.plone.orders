@@ -59,9 +59,8 @@ class INotificationSettings(Interface):
     """
 
     admin_email = Attribute(u"Shop admin email address")
-
     admin_name = Attribute(u"Shop admin name")
-
+    notification_emails = Attribute(u"List of e-mails to be notified with the Lorentz lab bookings")
 
 class IItemNotificationText(Interface):
     """Interface for providing notification text for items in order.
