@@ -12,7 +12,10 @@
   </style>
 
   <div id="tours-header">
-    <a href="@@exporttours" class="btn btn-default" type="button">Export</a>
+    <form method="post" action="@@exporttours" id="export-tours-form">
+      <input name="exporttoursdata" type="hidden" value="" id="exportordersdata"/>
+      <button class="btn btn-default" type="submit">Export</button>
+    </form>
   </div>
 
   <table tal:define="columns view/get_columns;

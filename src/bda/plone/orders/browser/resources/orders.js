@@ -26,6 +26,8 @@
         orders.comment_edit_binder(document);
     });
 
+    var keydown_timer = null;
+
     var orders = {
 
         qr_code_binder: function(context) {
@@ -60,6 +62,10 @@
                 "bProcessing": true,
                 "bServerSide": true,
                 "sAjaxSource": url,
+                "fnServerParams": function(aoData) {
+                    aoData.push({"name": "from_date", "value": $('#input-from_date').val()});
+                    aoData.push({"name": "to_date", "value":$('#input-to_date').val()});
+                },
                 "sPaginationType": "full_numbers",
                 "oLanguage": {
                     "sUrl": "@@collective.js.datatables.translation"
@@ -90,8 +96,12 @@
             $('#input-datefilter').unbind('change')
                                 .bind('change', orders.filter_orders);
 
-            $('#export-tours').unbind('click')
-                                .bind('click', orders.export_tours);
+            $('#export-tours-form').unbind('submit')
+                                .bind('submit', orders.export_tours);
+
+            $('#input-from_date').unbind('change').bind('change', orders.filter_orders)
+
+            $('#input-to_date').unbind('change').bind('change', orders.filter_orders)
         },
 
         cancel_confirm_binder: function(context) {
@@ -157,40 +167,48 @@
         },
 
         export_tours: function(event) {
-            event.preventDefault();
             var rows = [];
             var oTable = document.getElementById('bdaploneorders');
-            var oDataTable = $(oTable).dataTable();
-            var data = oDataTable.fnGetData();
-            var data_ajax_url = $("#bdaploneorders").attr("data-ajaxurl");
-            var params = $("#bdaploneorders").DataTable().ajax.params();
-            params.iDisplayLength = -1;
-            params.date_filter = "future";
+            var oExporttoursdata = document.getElementById('exporttoursdata');
             
-            $.ajax({
-                url: data_ajax_url,
-                data: params
-            }).done(function(results) {
-                var json = results.aaData;
-                var rows = [];
-                $("#export-tours").attr("href", "@@exporttours");
-                for (i = 0; i < json.length; i++) {
-                    var status_html = $($.parseHTML(json[i][6])[0]);
-                    var status = $(status_html).text();
-                    var item = {
-                        "date": json[i][1],
-                        "quantity": json[i][2],
-                        "lastname": json[i][3],
-                        "firstname": json[i][4],
-                        "email": json[i][5],
-                        "status": status
+            if ($(oExporttoursdata).val() == "") {
+                var oDataTable = $(oTable).dataTable();
+                var data = oDataTable.fnGetData();
+                var data_ajax_url = $("#bdaploneorders").attr("data-ajaxurl");
+                var params = $("#bdaploneorders").DataTable().ajax.params();
+                params.iDisplayLength = -1;
+                params.date_filter = "future";
+                
+                $.ajax({
+                    url: data_ajax_url,
+                    data: params
+                }).done(function(results) {
+                    var json = results.aaData;
+                    var rows = [];
+                    $("#export-tours").attr("href", "@@exporttours");
+                    for (i = 0; i < json.length; i++) {
+                        var status_html = $($.parseHTML(json[i][6])[0]);
+                        var status = $(status_html).text();
+                        var item = {
+                            "date": json[i][1],
+                            "quantity": json[i][2],
+                            "lastname": json[i][3],
+                            "firstname": json[i][4],
+                            "email": json[i][5],
+                            "status": status
+                        }
+                        rows.push(item);
                     }
-                    rows.push(item);
-                }
-                var href = $("#export-tours").attr("href");
-                $("#export-tours").attr("href", href+"?data="+JSON.stringify(rows));
-                location.href = $("#export-tours").attr("href");
-            });
+
+                    var jsonData = JSON.stringify(rows);
+                    $(oExporttoursdata).attr("value", jsonData);
+                    $('#export-tours-form').submit();
+                    $(oExporttoursdata).attr("value", "");
+                });
+                return false;
+            } else {
+                return true;
+            }
         },
 
         filter_orders: function(event) {
@@ -202,6 +220,8 @@
             var state = $('#input-state', wrapper).val();
             var salaried = $('#input-salaried', wrapper).val();
             var datefilter = $('#input-datefilter', wrapper).val();
+            var from_date = $("#input-from_date", wrapper).val();
+            var to_date = $("#input-to_date", wrapper).val();
 
             var ajax_table = wrapper.closest('.ajaxtable');
             var action = ajax_table.data('tablename');
@@ -211,6 +231,8 @@
             target.params.state = state;
             target.params.salaried = salaried;
             target.params.datefilter = datefilter;
+            target.params.from_date = from_date;
+            target.params.to_date = to_date;
 
             if (datefilter != undefined) {
                 target.params.salaried = datefilter;
@@ -221,7 +243,6 @@
                 selector = '#bookings_wrapper';
                 target.params.group_by = $('#input-group_by').val();
             }
-
             bdajax.action({
                 name: action,
                 selector: selector,

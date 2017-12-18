@@ -287,7 +287,7 @@
 
   <!-- export orders -->
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="exportorders"
     class=".export.ExportOrdersForm"
     permission="bda.plone.orders.ExportOrders"

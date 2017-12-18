@@ -303,12 +303,12 @@ msgstr "Filter voor verkopers"
 #. Default: "Filter from date"
 #: ./browser/bookings.py:213
 msgid "filter_from_date"
-msgstr ""
+msgstr "Van-datum"
 
 #. Default: "Filter to date"
 #: ./browser/bookings.py:226
 msgid "filter_to_date"
-msgstr ""
+msgstr "Tot"
 
 #. Default: "Finish"
 #: ./vocabularies.py:32
@@ -885,3 +885,5 @@ msgstr "Ja"
 #: ./browser/order_done.pt:24
 msgid "your_order_order_id"
 msgstr "Uw bestelnummer: ${number}"
+
+

@@ -58,6 +58,9 @@ from plone.app.event.base import DT
 import calendar
 
 import plone.api
+from bda.intellidatetime import DateTimeConversionError
+from bda.intellidatetime import convert
+
 IS_P4 = pkg_resources.require("Products.CMFPlone")[0].version[0] == '4'
 
 
@@ -1028,6 +1031,44 @@ class OrdersToursTable(OrdersToursTableBase):
 
         if date_filter_selector:
             filter_widgets += date_filter_selector(request=self.request)
+
+        if state_selector:
+            filter_widgets += state_selector(request=self.request)
+
+        
+        # From date filter.
+        from_date = factory(
+            '#field:datetime',
+            name='from_date',
+            value=self.request.form.get('from_date', ''),
+            props={
+                'label': _('filter_from_date',
+                           default=u'Filter from date'),
+                'timepicker': False,
+                'datepicker': True,
+                'time': False,
+                'required': False,
+                'locale': 'nl'
+                
+            }
+        )
+        filter_widgets += from_date(request=self.request)
+
+        # To date filter.
+        to_date = factory('#field:datetime', 
+            name="to_date", 
+            value=self.request.form.get('to_date', ''), 
+            props={
+                'label': _('filter_to_date',
+                           default=u'Filter to date'),
+                'required': False,
+                'datepicker': True,
+                'time': False,
+                'timepicker': False,
+                'locale': 'nl'
+        })
+        filter_widgets += to_date(request=self.request)
+
         """filter_widgets += state_selector(request=self.request)"""
         """filter_widgets += salaried_selector(request=self.request)"""
 
@@ -1268,7 +1309,10 @@ class OrdersToursData(OrdersToursTable, TableData):
         sortcols_idx = int(self.request.form.get('iSortCol_0', 1))
         sort_id = columns[sortcols_idx]['id']
         sortparams['index'] = sort_id
-        sortparams['reverse'] = self.request.form.get('sSortDir_0') == 'desc'
+        reverse = False
+        if self.request.form.get('sSortDir_0') == 'desc':
+            reverse = True
+        sortparams['reverse'] = reverse
         return sortparams
 
     def get_title_tour(self, lazyrecord):
@@ -1374,7 +1418,54 @@ class OrdersToursData(OrdersToursTable, TableData):
 
         return False
 
-    def query(self, soup):
+    def _datetime_checker(self, lazyrecord, from_date, to_date):
+        # get portal language for datetime locale formating
+        # used for quering
+        portal = plone.api.portal.get()
+        locale = 'uk'
+
+        if len(from_date) > 0:
+            try:
+                from_date = convert(from_date, locale=locale)
+            except DateTimeConversionError:
+                raise
+                return True
+        if len(to_date) > 0:
+            try:
+                to_date = convert(to_date, locale=locale)
+            except DateTimeConversionError:
+                raise
+                return True
+            if isinstance(to_date, datetime.datetime) \
+                    and to_date.hour == 0 and to_date.minute == 0:
+                to_date = to_date.replace(hour=23, minute=59, second=59)
+
+        if isinstance(from_date, str) and isinstance(to_date, str):
+            return True
+
+        record = lazyrecord()
+        order_data = OrderData(self.context, uid=record.attrs['uid'])
+        for booking in order_data.bookings:
+            if "Lorentz" in booking.attrs.get('title', ''):
+                tour_date = booking.attrs.get('eventstart', '')
+
+                if isinstance(from_date, datetime.datetime) \
+                        and isinstance(to_date, str):
+                    return tour_date.date() >= from_date.date()
+
+                if isinstance(from_date, str) \
+                        and isinstance(to_date, datetime.datetime):
+                    return tour_date.date() <= to_date.date()
+
+                if isinstance(from_date, datetime.datetime) \
+                        and isinstance(to_date, datetime.datetime):
+                    return tour_date.date() >= from_date.date() and tour_date.date() <= to_date.date()
+
+                return True
+
+        return True
+
+    def query(self, soup, booking_state=None):
         if not soup:
             soup = get_soup(self.soup_name, self.context)
 
@@ -1403,14 +1494,23 @@ class OrdersToursData(OrdersToursTable, TableData):
 
 
         # Filter by state if given
-        state = self.request.form.get('state')
-        if state:
-            if state != "cancelled":
-                query = query & Eq('state', state)
+        if not booking_state:
+            state = self.request.form.get('state')
+            if state:
+                if state != "cancelled":
+                    query = query & Eq('state', state)
+        else:
+            state = booking_state
+            if state:
+                if state != "cancelled":
+                    query = query & Eq('state', state)
 
 
         # Filter by salaried if given
         salaried = self.request.form.get('salaried', '')
+
+        from_date = self.request.form.get('from_date', '')
+        to_date = self.request.form.get('to_date', '')
 
         date_filter = ""
         if salaried not in  ["yes", "no"]:
@@ -1456,6 +1556,12 @@ class OrdersToursData(OrdersToursTable, TableData):
         else:
             new_res = res
 
+        if from_date or to_date:
+            new_res = [elem for elem in list(new_res) if self._datetime_checker(elem, from_date, to_date)]
+            length = len(new_res)
+        else:
+            new_res = new_res
+
         export_filter = self.request.form.get('date_filter', '')
         if export_filter == "future":
             new_res = [elem for elem in list(new_res) if self.is_date_future(elem)]
@@ -1486,7 +1592,6 @@ class ExportOrdersToursData(OrdersToursData):
         order_data = OrderData(self.context, uid=record.attrs['uid'])
 
         tour = ""
-
         date_type = "today"
         
         for booking in order_data.bookings:
@@ -1920,3 +2025,6 @@ class BookingUpdateComment(BrowserView):
             )
         except ValueError:
             raise BadRequest('something is wrong with the value')
+
+
+            

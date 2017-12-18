@@ -51,7 +51,7 @@ logger = logging.getLogger('bda.plone.orders')
 
 NOTIFICATIONS = {}
 
-LIVE_URL = "http://tickets.teylersmuseum.nl"
+LIVE_URL = "http://ticketshop.intk.com"
 
 POSSIBLE_TEMPLATE_CALLBACKS = [
     'booking_cancelled_title',
@@ -836,12 +836,15 @@ class StockThresholdReachedCB(object):
 def notify_stock_threshold_reached(event):
     """Send notification mail when item is getting out of stock.
     """
-    order_data = OrderData(event.context, uid=get_order_uid(event))
-    templates = dict()
-    templates.update(get_stock_threshold_reached_templates(event.context))
-    templates['stock_threshold_reached_text_cb'] = \
-        StockThresholdReachedCB(event)
-    do_notify_shopmanager(event.context, order_data, templates)
+    try:
+        order_data = OrderData(event.context, uid=get_order_uid(event))
+        templates = dict()
+        templates.update(get_stock_threshold_reached_templates(event.context))
+        templates['stock_threshold_reached_text_cb'] = \
+            StockThresholdReachedCB(event)
+        do_notify_shopmanager(event.context, order_data, templates)
+    except:
+        pass
 
 
 NOTIFICATIONS['stock_threshold_reached'] = []

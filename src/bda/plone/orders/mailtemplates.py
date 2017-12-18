@@ -38,9 +38,9 @@ ORDER_TICKET_NL = """\
 <html>
     <head></head>
     <body>
-        <p>Hartelijk bedankt voor je bestelling. De tickets vind je in de bijlage. Deze zijn geldig tot één jaar na de aankoopdatum. Graag tot ziens in het museum!</p>
+        <p>Hartelijk bedankt voor je bestelling. De tickets en/of reserveringsbewijzen vind je in de bijlage. De entreetickets zijn geldig tot één jaar na de aankoopdatum, op het reserveringsbewijs voor De Lorentz Formule staat voor welk moment je gereserveerd hebt. Graag tot ziens in het museum!</p>
         <p>Heb je vragen over je bestelling, neem dan contact op met info@teylersmuseum.nl.</p>
-        <p>Bekijk de website van Teylers Museum voor een actueel overzicht van tentoonstellingn en activiteiten: <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
+        <p>Bekijk de website van Teylers Museum voor een actueel overzicht van tentoonstellingen en activiteiten: <a href="http://www.teylersmuseum.nl">www.teylersmuseum.nl</a> of volg ons op sociale media.</p>
     </body>
 </html>
 """
@@ -615,7 +615,10 @@ BOOKING_RESERVED_TO_ORDERED_TEMPLATES = {
 STOCK_THRESHOLD_REACHED_TEMPLATES = {
     'en': {
         'subject': STOCK_THRESHOLD_REACHED_SUBJECT_EN,
-        'body': STOCK_THRESHOLD_REACHED_BODY_EN}
+        'body': STOCK_THRESHOLD_REACHED_BODY_EN,
+        'ticket': STOCK_THRESHOLD_REACHED_BODY_EN,
+        'ticket_subject': STOCK_THRESHOLD_REACHED_SUBJECT_EN
+    }
 }
 
 

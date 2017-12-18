@@ -53,6 +53,9 @@ from email.mime.application import MIMEApplication
 from email.utils import formataddr
 import smtplib
 import datetime
+from Products.CMFPlone.interfaces import IPloneSiteRoot
+
+from bda.plone.cart import ascur
 
 class DialectExcelWithColons(csv.excel):
     delimiter = ';'
@@ -88,6 +91,19 @@ ORDER_EXPORT_ATTRS = [
     'order_comment.comment',
     'payment_selection.payment',
 ]
+
+ORDER_EXPORT_ATTRS_EXTENDED = [
+    'created',
+    'ordernumber',
+    'payment_selection.payment',
+]
+
+ORDER_HEADERS = [
+    'Datum',
+    'Bestelnummer',
+    'Betaling',
+]
+
 COMPUTED_ORDER_EXPORT_ATTRS = odict()
 BOOKING_EXPORT_ATTRS = [
     'title',
@@ -104,6 +120,27 @@ BOOKING_EXPORT_ATTRS = [
 ]
 COMPUTED_BOOKING_EXPORT_ATTRS = odict()
 
+BOOKING_EXPORT_ATTRS_EXTENDED = [
+    'title',
+    'item_number',
+    'buyable_count',
+    'net',
+    'vat',
+    'salaried'
+]
+
+BOOKING_HEADERS = [
+    'Titel',
+    'Artikelnummer',
+    'Aantal',
+    'Artikel netto',
+    'BTW',
+    'Betaald'
+]
+
+BOOKING_EXPORT_ATTRS_ORDERS = []
+
+COMPUTED_BOOKING_EXPORT_ATTRS = odict()
 
 def buyable_available(context, booking):
     obj = get_object_by_uid(context, booking.attrs['buyable_uid'])
@@ -131,10 +168,37 @@ def buyable_url(context, booking):
         return None
     return obj.absolute_url()
 
+def order_total(context, order):
+    return float(ascur(order.total))
 
-COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
-COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
+def order_vat(context, order):
+    return float(ascur(order.vat))
+
+def order_bookings(context, order):
+    bookings = []
+
+    for booking in order.bookings:
+        bookings.append("%s x %s" %(booking.attrs.get('buyable_count', ''), booking.attrs.get('title', '')))
+    
+    return " | ".join(bookings)
+    
+
+#COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
+#COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
 COMPUTED_BOOKING_EXPORT_ATTRS['buyable_url'] = buyable_url
+COMPUTED_ORDER_EXPORT_ATTRS['vat'] = order_vat
+COMPUTED_ORDER_EXPORT_ATTRS['order_total'] = order_total
+COMPUTED_ORDER_EXPORT_ATTRS['items'] = order_bookings
+
+COMPUTED_HEADERS = [
+    'URL'
+]
+
+COMPUTED_ORDER_HEADERS = [
+    'BTW',
+    'Totaal',
+    'Bestellingen'
+]
 
 
 def cleanup_for_csv(value):
@@ -146,7 +210,7 @@ def cleanup_for_csv(value):
         value = ''
     if isinstance(value, float) or \
        isinstance(value, Decimal):
-        value = str(value).replace('.', ',')
+        value = value
     return safe_encode(value)
 
 
@@ -198,9 +262,110 @@ class ExportOrdersForm(YAMLForm, OrdersContentView):
         Since the record object is available, you can return aggregated values.
         """
         val = record.attrs.get(attr_name)
+
+        # Translate salaried val
+        if attr_name in ['salaried']:
+            if val == 'yes':
+                val = 'Ja'
+            elif val == 'no':
+                val = 'Nee'
+            else:
+                val = val
+
+        if attr_name in ['payment_selection.payment']:
+            if val == 'mollie_payment':
+                val = "iDeal"
+
+        if attr_name in ['item_number']:
+            if not val:
+                uid = record.attrs.get('buyable_uid')
+                obj = get_object_by_uid(self.context, uid)
+                val = getattr(obj, 'item_number', '')
+
         return cleanup_for_csv(val)
 
+    def _get_buyables_in_context(self):
+        catalog = plone.api.portal.get_tool("portal_catalog")
+        path = '/'.join(self.context.getPhysicalPath())
+        brains = catalog(path=path, object_provides=IBuyable.__identifier__)
+        for brain in brains:
+            yield brain.UID
+
+    def csv_context(self):
+        context = self.context
+
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow(ORDER_HEADERS +
+                    COMPUTED_ORDER_HEADERS +
+                    BOOKING_HEADERS +
+                    COMPUTED_HEADERS)
+
+        bookings_soup = get_bookings_soup(context)
+
+        # First, filter by allowed vendor areas
+        vendor_uids = get_vendor_uids_for()
+        query_b = Ge('created', self.from_date) & Le('created', self.to_date)
+        query_b = query_b & Any('vendor_uid', vendor_uids)
+
+        # Second, query for the buyable
+        buyable_uids = self._get_buyables_in_context()
+        query_b = query_b & Any('buyable_uid', buyable_uids)
+
+        all_orders = {}
+        for booking in bookings_soup.query(query_b, sort_index='created'):
+            booking_attrs = list()
+            # booking export attrs
+            for attr_name in BOOKING_EXPORT_ATTRS_EXTENDED:
+                val = self.export_val(booking, attr_name)
+                booking_attrs.append(val)
+            # computed booking export attrs
+            for attr_name in COMPUTED_BOOKING_EXPORT_ATTRS:
+                cb = COMPUTED_BOOKING_EXPORT_ATTRS[attr_name]
+                val = cb(context, booking)
+                val = cleanup_for_csv(val)
+                booking_attrs.append(val)
+
+            # create order_attrs, if it doesn't exist
+            order_uid = booking.attrs.get('order_uid')
+            if order_uid not in all_orders:
+                order = get_order(context, order_uid)
+                order_data = OrderData(context,
+                                       order=order,
+                                       vendor_uids=vendor_uids)
+                order_attrs = list()
+                # order export attrs
+                for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
+                    val = self.export_val(order, attr_name)
+                    order_attrs.append(val)
+                # computed order export attrs
+                for attr_name in COMPUTED_ORDER_EXPORT_ATTRS:
+                    cb = COMPUTED_ORDER_EXPORT_ATTRS[attr_name]
+                    val = cb(self.context, order_data)
+                    val = cleanup_for_csv(val)
+                    order_attrs.append(val)
+                all_orders[order_uid] = order_attrs
+
+            ex.writerow(all_orders[order_uid] + booking_attrs)
+        
+        s_start = self.from_date.strftime('%G-%m-%d_%H-%M-%S')
+        s_end = self.to_date.strftime('%G-%m-%d_%H-%M-%S')
+        filename = 'tickets-export-%s-%s.csv' % (s_start, s_end)
+        self.request.response.setHeader('Content-Type', 'text/csv')
+        self.request.response.setHeader('Content-Disposition',
+                                        'attachment; filename=%s' % filename)
+
+        ret = sio.getvalue()
+        sio.close()
+        return ret
+
     def csv(self, request):
+
+        #if not IPloneSiteRoot.providedBy(self.context):
+        #return self.csv_context()
+
         # get orders soup
         orders_soup = get_orders_soup(self.context)
         # get bookings soup
@@ -227,28 +392,28 @@ class ExportOrdersForm(YAMLForm, OrdersContentView):
         sio = StringIO()
         ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
         # exported column keys as first line
-        ex.writerow(ORDER_EXPORT_ATTRS +
-                    COMPUTED_ORDER_EXPORT_ATTRS.keys() +
-                    BOOKING_EXPORT_ATTRS +
-                    COMPUTED_BOOKING_EXPORT_ATTRS.keys())
+        ex.writerow(ORDER_HEADERS + COMPUTED_ORDER_HEADERS)
+        
         # query orders
-        for order in orders_soup.query(query):
+        for order in orders_soup.query(query, sort_index='created'):
             # restrict order bookings for current vendor_uids
             order_data = OrderData(self.context,
                                    order=order,
                                    vendor_uids=vendor_uids)
             order_attrs = list()
             # order export attrs
-            for attr_name in ORDER_EXPORT_ATTRS:
+            for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
                 val = self.export_val(order, attr_name)
                 order_attrs.append(val)
+            
             # computed order export attrs
             for attr_name in COMPUTED_ORDER_EXPORT_ATTRS:
                 cb = COMPUTED_ORDER_EXPORT_ATTRS[attr_name]
                 val = cb(self.context, order_data)
                 val = cleanup_for_csv(val)
                 order_attrs.append(val)
-            for booking in order_data.bookings:
+
+            """for booking in order_data.bookings:
                 booking_attrs = list()
                 # booking export attrs
                 for attr_name in BOOKING_EXPORT_ATTRS:
@@ -260,13 +425,17 @@ class ExportOrdersForm(YAMLForm, OrdersContentView):
                     val = cb(self.context, booking)
                     val = cleanup_for_csv(val)
                     booking_attrs.append(val)
-                ex.writerow(order_attrs + booking_attrs)
+                #ex.writerow(order_attrs + booking_attrs)
                 booking.attrs['exported'] = True
-                bookings_soup.reindex(booking)
+                bookings_soup.reindex(booking)"""
+
+            if getattr(order_data, 'salaried', None) == "yes":
+                ex.writerow(order_attrs)
+
         # create and return response
         s_start = self.from_date.strftime('%G-%m-%d_%H-%M-%S')
         s_end = self.to_date.strftime('%G-%m-%d_%H-%M-%S')
-        filename = 'orders-export-%s-%s.csv' % (s_start, s_end)
+        filename = 'tickets-export-%s-%s.csv' % (s_start, s_end)
         self.request.response.setHeader('Content-Type', 'text/csv')
         self.request.response.setHeader('Content-Disposition',
                                         'attachment; filename=%s' % filename)
@@ -282,6 +451,11 @@ class ExportToursContextual(BrowserView):
     def __call__(self):
         user = plone.api.user.get_current()
         # check if authenticated user is vendor
+
+        if not hasattr(user, 'checkPermission'):
+            raise Unauthorized
+        if not user:
+            raise Unauthorized
         if not user.checkPermission(permissions.ModifyOrders, self.context):
             raise Unauthorized
 
@@ -340,7 +514,7 @@ class ExportToursContextual(BrowserView):
         # exported column keys as first line
         ex.writerow([attr[1] for attr in TOUR_EXPORT_ATTRS])
 
-        data_request = self.request.get('data', None)
+        data_request = self.request.get('exporttoursdata', None)
 
         bookings = []
         
@@ -371,11 +545,21 @@ class ExportToursContextual(BrowserView):
 class SendToursDataContextual(BrowserView):
 
     def __call__(self):
+        user = plone.api.user.get_current()
+        # check if authenticated user is vendor
+
+        if not hasattr(user, 'checkPermission'):
+            raise Unauthorized
+        if not user:
+            raise Unauthorized
+        if not user.checkPermission(permissions.ModifyOrders, self.context):
+            raise Unauthorized
+            
         self.settings = INotificationSettings(self.context)
 
         tickets_folder = plone.api.content.get(path='/nl/tickets')
         data = tickets_folder.unrestrictedTraverse("@@exportorderstoursdata")
-        length, res = data.query(None)
+        length, res = data.query(None, booking_state="new")
         self.export_data_request = data.get_aaData(res)
 
         # Special case for constructed objects like IEventOccurrence from
@@ -462,6 +646,28 @@ class SendToursDataContextual(BrowserView):
 
         return True
 
+    def search_timeslot_id(self, search_id, timeslots):
+        for i in range(len(timeslots)):
+            if timeslots[i]['_id'] == search_id:
+                return True
+        return False
+
+    def change_timeslot_quantity(self, search_id, quantity, timeslots):
+        for i in range(len(timeslots)):
+            if timeslots[i]['_id'] == search_id:
+                timeslots[i]['quantity'] += int(quantity)
+                return True
+        return False
+
+    def find_if_skipped(self, week_slot, used_timeslots):
+
+        for used_timeslot in used_timeslots:
+            timeslot = used_timeslot['_id']
+            if week_slot in timeslot:
+                return False
+
+        return True
+
     def get_csv(self):
 
         datefilter = self.request.get('datefilter', None)
@@ -487,6 +693,7 @@ class SendToursDataContextual(BrowserView):
         data_request = self.request.get('data', None)
 
         bookings = []
+        used_timeslots = []
         
         # Get data
         data = self.get_data_from_request(data_request)
@@ -502,9 +709,65 @@ class SendToursDataContextual(BrowserView):
 
             bookings.append(new_booking)
 
+        TOTAL_AVAILABLE = 20
+
+        week_slots = ['12:30 - 13:20', '14:00 - 14:50', '15:30 - 16:20']
+        weekend_slots = ['11:15 - 12:05', '12:45 - 13:35', '14:15 - 15:05', '15:45 - 16:35']
+        timeslots_available = week_slots
+        
+        if datetime.datetime.today().weekday() in [5, 6]:
+             timeslots_available = weekend_slots
+
         for booking in bookings:
             row = [cleanup_for_csv(booking.get(attr[0], '')) for attr in TOUR_EXPORT_ATTRS]
+            if booking.get('date', ''):
+                if not self.search_timeslot_id(booking.get('date', ''), used_timeslots):
+                    if len(used_timeslots) > 0:
+                        if booking.get('date', '') != used_timeslots[-1]['_id']:
+                            """ Write new row """
+                            reservations_timeslot_row = ['Gereserveerd', used_timeslots[-1]['quantity'], '', '', '', '']
+                            over_available = TOTAL_AVAILABLE - used_timeslots[-1]['quantity']
+                            if over_available < 0:
+                                over_available = 0
+                            over_timeslot_row = ['Over', over_available, '', '', '', '']
+                            ex.writerow(reservations_timeslot_row)
+                            ex.writerow(over_timeslot_row)
+                            ex.writerow(['', '', '', '', '', ''])
+
+                    used_timeslots.append({'_id': booking.get('date', ''), 'quantity': int(booking.get('quantity', ''))})
+                else:
+                    self.change_timeslot_quantity(booking.get('date', ''), booking.get('quantity', ''), used_timeslots)
             ex.writerow(row)
+
+        slot_date = None
+        """ Write last row with details """
+        if used_timeslots:
+            reservations_timeslot_row = ['Gereserveerd', used_timeslots[-1]['quantity'], '', '', '', '']
+            over_available = TOTAL_AVAILABLE - used_timeslots[-1]['quantity']
+            if over_available < 0:
+                over_available = 0
+            over_timeslot_row = ['Over', over_available, '', '', '', '']
+            ex.writerow(reservations_timeslot_row)
+            ex.writerow(over_timeslot_row)
+            slot_date = used_timeslots[0]['_id'].split(",")[0]
+            ex.writerow(['', '', '', '', '', ''])
+
+        for week_slot in timeslots_available:
+            skipped = self.find_if_skipped(week_slot, used_timeslots)
+            if skipped:
+                if slot_date:
+                    skipped_date = "%s, %s" %(slot_date, week_slot)
+                else:
+                    skipped_date = "%s" %(week_slot)
+
+                skipped_date_row = [skipped_date, '', '', '', '', '']
+                reservations_timeslot_row = ['Gereserveerd', 0, '', '', '', '']
+                over_timeslot_row = ['Over', TOTAL_AVAILABLE, '', '', '', '']
+                ex.writerow(skipped_date_row)
+                ex.writerow(reservations_timeslot_row)
+                ex.writerow(over_timeslot_row)
+                ex.writerow(['', '', '', '', '', ''])
+
 
         ret = sio.getvalue()
         sio.close()

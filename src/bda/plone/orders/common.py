@@ -449,14 +449,13 @@ class OrderCheckoutAdapter(CheckoutAdapter):
     def create_bookings(self, order):
         ret = list()
         cart_data = get_data_provider(self.context)
-        for uid, count, comment in self.items:
-            booking = self.create_booking(
-                order, cart_data, uid, count, comment)
+        for uid, count, comment, coupon in self.items:
+            booking = self.create_booking(order, cart_data, uid, count, comment, coupon)
             if booking:
                 ret.append(booking)
         return ret
 
-    def create_booking(self, order, cart_data, uid, count, comment):
+    def create_booking(self, order, cart_data, uid, count, comment, coupon):
         from bda.plone.molliepayment.mollie_payment.tickets.behaviors import get_number_of_barcodes
         from bda.plone.molliepayment.mollie_payment.tickets.behaviors import get_barcode
         from bda.plone.molliepayment.mollie_payment.tickets.behaviors import NOT_ALLOWED
@@ -534,7 +533,7 @@ class OrderCheckoutAdapter(CheckoutAdapter):
         booking.attrs['title'] = brain and brain.Title or 'unknown'
         booking.attrs['net'] = item_data.net
         booking.attrs['vat'] = item_data.vat
-        booking.attrs['discount_net'] = item_data.discount_net(count)
+        booking.attrs['discount_net'] = item_data.discount_net(count, coupon)
         booking.attrs['currency'] = cart_data.currency
         booking.attrs['quantity_unit'] = item_data.quantity_unit
         booking.attrs['remaining_stock_available'] = available
@@ -1045,6 +1044,10 @@ def payment_failed(event):
         order.salaried = ifaces.SALARIED_FAILED
         order.tid = data['tid']
 
+    order = OrderData(event.context, uid=event.order_uid)
+    order.state = ifaces.STATE_CANCELLED
+    
+
 
 def booking_update_comment(context, booking_uid, comment):
     booking_data = BookingData(context, uid=booking_uid)
@@ -1053,3 +1056,4 @@ def booking_update_comment(context, booking_uid, comment):
     booking = booking_data.booking
     booking.attrs['buyable_comment'] = comment
     booking_data.reindex()
+
