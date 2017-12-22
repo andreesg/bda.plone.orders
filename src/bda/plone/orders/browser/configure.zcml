@@ -157,21 +157,21 @@
 
   <!-- order transitions for plone root -->
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="statetransition"
     class=".views.StateTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer"/>
 
   <browser:page
-    for="zope.component.interfaces.ISite"
+    for="*"
     name="salariedtransition"
     class=".views.SalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
     layer="..interfaces.IOrdersExtensionLayer"/>
 
   <!-- order transitions for vendor -->
-  <browser:page
+  <!--<browser:page
     for="bda.plone.orders.interfaces.IVendor"
     name="statetransition"
     class=".views.StateTransition"
@@ -183,7 +183,7 @@
     name="salariedtransition"
     class=".views.SalariedTransition"
     permission="bda.plone.orders.ModifyOrders"
-    layer="..interfaces.IOrdersExtensionLayer"/>
+    layer="..interfaces.IOrdersExtensionLayer"/>-->
 
   <!-- export orders -->
   <browser:page

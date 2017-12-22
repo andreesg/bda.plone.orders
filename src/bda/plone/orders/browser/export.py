@@ -77,14 +77,12 @@ ORDER_EXPORT_ATTRS_EXTENDED = [
     'created',
     'ordernumber',
     'payment_selection.payment',
-    'order_comment.comment'
 ]
 
 ORDER_HEADERS = [
     'Datum',
     'Bestelnummer',
     'Betaling',
-    'Commentaar'
 ]
 
 COMPUTED_ORDER_EXPORT_ATTRS = odict()
@@ -150,10 +148,24 @@ def buyable_url(context, booking):
 def order_total(context, order):
     return ascur(order.total)
 
+def order_vat(context, order):
+    return float(ascur(order.vat))
+
+def order_bookings(context, order):
+    bookings = []
+
+    for booking in order.bookings:
+        bookings.append("%s x %s" %(booking.attrs.get('buyable_count', ''), booking.attrs.get('title', '')))
+    
+    return " | ".join(bookings)
+
 #COMPUTED_BOOKING_EXPORT_ATTRS['buyable_available'] = buyable_available
 #COMPUTED_BOOKING_EXPORT_ATTRS['buyable_overbook'] = buyable_overbook
 COMPUTED_BOOKING_EXPORT_ATTRS['buyable_url'] = buyable_url
+COMPUTED_ORDER_EXPORT_ATTRS['vat'] = order_vat
 COMPUTED_ORDER_EXPORT_ATTRS['order_total'] = order_total
+COMPUTED_ORDER_EXPORT_ATTRS['order_total'] = order_total
+COMPUTED_ORDER_EXPORT_ATTRS['items'] = order_bookings
 
 
 COMPUTED_HEADERS = [
@@ -161,7 +173,9 @@ COMPUTED_HEADERS = [
 ]
 
 COMPUTED_ORDER_HEADERS = [
-    'Totaal'
+    'BTW',
+    'Totaal',
+    'Bestellingen'
 ]
 
 
@@ -174,7 +188,7 @@ def cleanup_for_csv(value):
         value = ''
     if isinstance(value, float) or \
        isinstance(value, Decimal):
-        value = str(value).replace('.', ',')
+        value = value
     return safe_encode(value)
 
 
@@ -255,7 +269,7 @@ class ExportOrdersForm(YAMLForm):
         for brain in brains:
             yield brain.UID
 
-    def csv_context(self):
+    """def csv_context(self):
         context = self.context
 
         # prepare csv writer
@@ -321,6 +335,86 @@ class ExportOrdersForm(YAMLForm):
         self.request.response.setHeader('Content-Disposition',
                                         'attachment; filename=%s' % filename)
 
+        ret = sio.getvalue()
+        sio.close()
+        return ret"""
+
+    def csv_context(self):
+        context = self.context
+
+        # get orders soup
+        orders_soup = get_orders_soup(self.context)
+        # get bookings soup
+        bookings_soup = get_bookings_soup(self.context)
+        # fetch user vendor uids
+        vendor_uids = get_vendor_uids_for()
+        # base query for time range
+        query = Ge('created', self.from_date) & Le('created', self.to_date)
+        # filter by given vendor uid or user vendor uids
+        vendor_uid = self.vendor
+        if vendor_uid:
+            vendor_uid = uuid.UUID(vendor_uid)
+            # raise if given vendor uid not in user vendor uids
+            if vendor_uid not in vendor_uids:
+                raise Unauthorized
+            query = query & Any('vendor_uids', [vendor_uid])
+        else:
+            query = query & Any('vendor_uids', vendor_uids)
+        # filter by customer if given
+        customer = self.customer
+        if customer:
+            query = query & Eq('creator', customer)
+        # prepare csv writer
+        sio = StringIO()
+        ex = csv.writer(sio, dialect='excel-colon', quoting=csv.QUOTE_MINIMAL)
+        # exported column keys as first line
+        ex.writerow(ORDER_HEADERS + COMPUTED_ORDER_HEADERS)
+        
+        # query orders
+        for order in orders_soup.query(query, sort_index='created'):
+            # restrict order bookings for current vendor_uids
+            order_data = OrderData(self.context,
+                                   order=order,
+                                   vendor_uids=vendor_uids)
+            order_attrs = list()
+            # order export attrs
+            for attr_name in ORDER_EXPORT_ATTRS_EXTENDED:
+                val = self.export_val(order, attr_name)
+                order_attrs.append(val)
+            
+            # computed order export attrs
+            for attr_name in COMPUTED_ORDER_EXPORT_ATTRS:
+                cb = COMPUTED_ORDER_EXPORT_ATTRS[attr_name]
+                val = cb(self.context, order_data)
+                val = cleanup_for_csv(val)
+                order_attrs.append(val)
+
+            """for booking in order_data.bookings:
+                booking_attrs = list()
+                # booking export attrs
+                for attr_name in BOOKING_EXPORT_ATTRS:
+                    val = self.export_val(booking, attr_name)
+                    booking_attrs.append(val)
+                # computed booking export attrs
+                for attr_name in COMPUTED_BOOKING_EXPORT_ATTRS:
+                    cb = COMPUTED_BOOKING_EXPORT_ATTRS[attr_name]
+                    val = cb(self.context, booking)
+                    val = cleanup_for_csv(val)
+                    booking_attrs.append(val)
+                #ex.writerow(order_attrs + booking_attrs)
+                booking.attrs['exported'] = True
+                bookings_soup.reindex(booking)"""
+
+            if getattr(order_data, 'salaried', None) == "yes":
+                ex.writerow(order_attrs)
+
+        # create and return response
+        s_start = self.from_date.strftime('%G-%m-%d_%H-%M-%S')
+        s_end = self.to_date.strftime('%G-%m-%d_%H-%M-%S')
+        filename = 'orders-export-%s-%s.csv' % (s_start, s_end)
+        self.request.response.setHeader('Content-Type', 'text/csv')
+        self.request.response.setHeader('Content-Disposition',
+                                        'attachment; filename=%s' % filename)
         ret = sio.getvalue()
         sio.close()
         return ret

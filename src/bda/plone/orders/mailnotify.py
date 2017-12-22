@@ -147,7 +147,7 @@ class MailNotify(object):
         context_url = self.context.absolute_url()
 
         uid = self.order_data.order.attrs['uid']
-        link = "%s/nl/tickets/etickets?order_id=%s" %(LIVE_URL, uid)
+        link = "%s/nl/tickets/etickets?order_id=%s" %(TEST_URL, uid)
 
         """view_name, get_params = extract_from_url(link, context_url)
 
@@ -259,7 +259,7 @@ class MailNotify(object):
                 msg.attach(text)
                 msg.attach(pdfAttachment)
             else:
-                failed_text = "<p><a href='%s/nl/download_as_pdf?page_url=%s/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(LIVE_URL, LIVE_URL, self.order_data.order.attrs['uid'])
+                failed_text = "<p><a href='%s/nl/download_as_pdf?page_url=%s/nl/tickets/etickets?order_id=%s'>Download e-ticket(s)</a></p>"%(TEST_URL, TEST_URL, self.order_data.order.attrs['uid'])
                 message = message + failed_text
                 text.attach(MIMEText(message, 'html', 'utf-8'))
                 msg.attach(text)
@@ -865,11 +865,13 @@ NOTIFICATIONS['payment_success'].append(notify_payment_success_shopmanager)
 
 
 def notify_booking_cancelled_customer(event):
-    notify_booking_cancelled(event, who="customer")
+    """notify_booking_cancelled(event, who="customer")"""
+    pass
 
 
 def notify_booking_cancelled_shopmanager(event):
-    notify_booking_cancelled(event, who="shopmanager")
+    """notify_booking_cancelled(event, who="shopmanager")"""
+    pass
 
 
 NOTIFICATIONS['booking_cancelled'].append(notify_booking_cancelled_customer)

@@ -10,6 +10,8 @@ from souper.soup import NodeAttributeIndexer
 from souper.soup import NodeTextIndexer
 from souper.soup import Record
 from zope.interface import implementer
+from bda.plone.orders import safe_encode
+
 
 import uuid
 import random
@@ -86,7 +88,7 @@ def extract_contact(order):
     contact = dict()
     for attr in CONTACT_ATTRIBUTES:
         value = order.attrs.get(attr, u'').strip()
-        _value = value.decode('ascii', 'ignore')
+        _value = safe_encode(value.decode('ascii', 'ignore'))
         contact[attr] = _value
     return contact
 
@@ -123,14 +125,17 @@ def lookup_contact(context, contact):
         record = rec
         break
     if not record:
+        print "new record"
         record = Record()
         record.attrs['uid'] = uuid.uuid4()
         record.attrs['cid'] = next_contact_id(soup)
         record.attrs.update(contact.items())
         soup.add(record)
     else:
+        print "update record"
         record.attrs.update(contact.items())
         soup.reindex([record])
+
     return record
 
 
@@ -139,4 +144,9 @@ def save_contact(event):
     order contact to soup.
     """
     order = get_order(event.context, event.uid)
-    lookup_contact(event.context, extract_contact(order))
+    try:
+        lookup_contact(event.context, extract_contact(order))
+    except:
+        pass
+        
+
