@@ -712,7 +712,7 @@ class SendToursDataContextual(BrowserView):
         TOTAL_AVAILABLE = 20
 
         week_slots = ['12:30 - 13:20', '14:00 - 14:50', '15:30 - 16:20']
-        weekend_slots = ['11:15 - 12:05', '12:45 - 13:35', '14:15 - 15:05', '15:45 - 16:35']
+        weekend_slots = ['11:30 - 12:20', '12:45 - 13:35', '14:30 - 15:20', '15:45 - 16:35']
         timeslots_available = week_slots
         
         if datetime.datetime.today().weekday() in [5, 6]:

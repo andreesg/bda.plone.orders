@@ -763,8 +763,9 @@ class OrderData(OrderState):
         order.attrs['state'] = value
         self.reindex_bookings(bookings)
         self.reindex_order(order)
-
         transaction.get().commit()
+
+        
 
     @property
     def salaried(self):
@@ -1046,6 +1047,8 @@ def payment_failed(event):
 
     order = OrderData(event.context, uid=event.order_uid)
     order.state = ifaces.STATE_CANCELLED
+
+
     
 
 
